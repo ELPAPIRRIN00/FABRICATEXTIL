@@ -1,0 +1,78 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Añadir Nuevo Producto{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h1 class="mb-0">Añadir Nuevo Producto al Inventario</h1>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.sku.label_tag }}
+                    {{ form.sku }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.nombre_tela.label_tag }}
+                    {{ form.nombre_tela }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.tipo.label_tag }}
+                    {{ form.tipo }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.composicion.label_tag }}
+                    {{ form.composicion }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.color.label_tag }}
+                    {{ form.color }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    {{ form.largo.label_tag }}
+                    {{ form.largo }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    {{ form.ancho.label_tag }}
+                    {{ form.ancho }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    {{ form.pz.label_tag }}
+                    {{ form.pz }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.peso_por_pz.label_tag }}
+                    {{ form.peso_por_pz }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.peso_aprox.label_tag }}
+                    {{ form.peso_aprox }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                {{ form.descripcion.label_tag }}
+                {{ form.descripcion }}
+            </div>
+
+            <hr>
+
+            <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar Producto</button>
+            <a href="{% url 'lista_de_productos' %}" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

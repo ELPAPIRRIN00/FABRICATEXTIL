@@ -1,0 +1,71 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Reportes de Inventario{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Reportes de Inventario</h1>
+
+<div class="row">
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card text-white bg-primary shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-box-seam"></i> Productos Únicos</h5>
+                <p class="card-text fs-1 fw-bold">{{ total_productos_unicos }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card text-white bg-success shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-stack"></i> Total de Piezas en Stock</h5>
+                <p class="card-text fs-1 fw-bold">{{ total_piezas_stock }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-4">
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5>Productos por Tipo</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for item in productos_por_tipo %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item.tipo }}
+                        <span class="badge bg-primary rounded-pill">{{ item.cantidad }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">No hay datos.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5>Últimos 5 Movimientos</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for movimiento in ultimos_movimientos %}
+                    <li class="list-group-item">
+                        <span class="fw-bold">{{ movimiento.tipo_movimiento }} de {{ movimiento.cantidad }} pz</span>
+                        <small class="d-block text-muted">Producto: {{ movimiento.producto.sku }} | Por: {{ movimiento.usuario.username|default:'Sistema' }}</small>
+                        <small class="d-block text-muted">{{ movimiento.fecha_movimiento|date:"d M, Y H:i" }}</small>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">No se han registrado movimientos.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
