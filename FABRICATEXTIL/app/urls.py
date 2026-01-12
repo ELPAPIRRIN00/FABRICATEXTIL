@@ -1,17 +1,17 @@
 from django.urls import path
 from . import views
 
-# --- RESTAURAMOS ESTA LÕNEA PARA QUE NO FALLEN TUS OTROS ARCHIVOS ---
+# --- RESTAURAMOS ESTA L√çNEA PARA QUE NO FALLEN TUS OTROS ARCHIVOS ---
 app_name = 'app'
 
 urlpatterns = [
-    # P·ginas principales
+    # P√°ginas principales
     path('', views.index, name='index'),
     path('productos/', views.lista_productos, name='lista_productos'),
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
     
-    # GestiÛn de Productos
+    # Gesti√≥n de Productos
     path('producto/nuevo/', views.crear_producto, name='crear_producto'),
     path('producto/<str:sku>/', views.detalle_producto, name='detalle_producto'),
     path('producto/<str:sku>/editar/', views.editar_producto, name='editar_producto'),
@@ -29,6 +29,6 @@ urlpatterns = [
     path('escaner/', views.escaner_view, name='escaner_view'),
     path('reportes/', views.ver_reportes, name='ver_reportes'),
 
-    # AGREGA ESTA NUEVA LÕNEA:
+    # AGREGA ESTA NUEVA L√çNEA:
     path('escaner/camara/', views.camara_view, name='camara_view'),
 ]

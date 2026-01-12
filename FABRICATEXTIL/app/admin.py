@@ -1,4 +1,4 @@
-﻿from django.contrib import admin
+from django.contrib import admin
 # --- CORRECCIÓN 1 ---
 # Importamos SOLO los modelos que SÍ existen: Producto y MovimientoInventario
 from .models import Producto, MovimientoInventario
@@ -58,3 +58,4 @@ class MovimientoInventarioAdmin(admin.ModelAdmin):
 # Eliminamos las líneas que daban error
 # admin.site.register(Categoria)  <-- ELIMINADO (daba error)
 # admin.site.register(Proveedor) <-- ELIMINADO (daba error)
+# Ajuste de codificación
