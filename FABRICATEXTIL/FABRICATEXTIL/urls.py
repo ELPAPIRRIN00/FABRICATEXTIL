@@ -5,5 +5,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('inventario/', include('app.urls', namespace='app')),
     path('accounts/', include('django.contrib.auth.urls')),
-    # Borra cualquier otra línea path() que hubiera aquí (como la de 'about', 'contact', etc.)
+    # Borra cualquier otra lÃ­nea path() que hubiera aquÃ­ (como la de 'about', 'contact', etc.)
 ]
