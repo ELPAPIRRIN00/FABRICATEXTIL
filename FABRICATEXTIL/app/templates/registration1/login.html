@@ -1,0 +1,41 @@
+{% extends 'app/base.html' %}
+
+{% block contenido %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Iniciar Sesión</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <small>Usuario o contraseña incorrectos.</small>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label fw-bold">Usuario</label>
+                        <input type="text" name="username" class="form-control" id="id_username" required placeholder="Tu usuario">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label fw-bold">Contraseña</label>
+                        <input type="password" name="password" class="form-control" id="id_password" required placeholder="Tu contraseña">
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Ingresar al Inventario</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center text-muted">
+                <small>Fábrica Textil v1.0</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
