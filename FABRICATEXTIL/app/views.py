@@ -2,13 +2,15 @@
 import json
 import os
 import google.generativeai as genai
+from datetime import datetime, timedelta  # <--- AGREGADO PARA QUE NO FALLEN LOS REPORTES
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse # <--- AGREGADO HttpResponse
 from django.db.models import Sum
 from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User # <--- AGREGADO PARA CREAR EL ADMIN
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
@@ -298,4 +300,18 @@ def generar_descripcion_api(request):
             print(f"Error Gemini API: {e}")
             return JsonResponse({'error': str(e)}, status=500)
     
-    return JsonResponse({'error': 'Invalid method'}, status=405) 
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+# --- MAGIA ADMIN (TEMPORAL) ---
+# Esta es la funcion secreta para crear tu superusuario
+def crear_superusuario_rapido(request):
+    try:
+        # Verifica si ya existe para no duplicarlo
+        if not User.objects.filter(username='admin').exists():
+            # Crea el usuario: usuario='admin', correo='admin@test.com', contraseña='Admin123'
+            User.objects.create_superuser('admin', 'admin@test.com', 'Admin123')
+            return HttpResponse("<h1>✅ ¡Listo! Usuario 'admin' creado.</h1><p>Contraseña: Admin123</p>")
+        else:
+            return HttpResponse("<h1>⚠️ El usuario 'admin' ya existe.</h1>")
+    except Exception as e:
+        return HttpResponse(f"<h1>❌ Error: {e}</h1>")
