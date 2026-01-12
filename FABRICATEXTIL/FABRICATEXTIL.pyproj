@@ -63,11 +63,13 @@
     <Folder Include="app\static\app\scripts\" />
     <Folder Include="app\templates\" />
     <Folder Include="app\templates\app\" />
+    <Folder Include="app\templates\registration1\" />
     <Folder Include="FABRICATEXTIL\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="app\static\app\css\style.css" />
     <Content Include="app\static\app\js\html5-qrcode.min.js" />
+    <Content Include="app\static\app\manifest.json" />
     <Content Include="app\templates\app\lista_productos.html" />
     <Content Include="app\templates\app\detalle_producto.html" />
     <Content Include="app\templates\app\ajustar_stock.html" />
@@ -82,6 +84,8 @@
     <Content Include="app\templates\app\index.html" />
     <Content Include="app\templates\app\producto_form.html" />
     <Content Include="app\templates\app\decision_post_accion.html" />
+    <Content Include="app\templates\app\eleccion_escaner.html" />
+    <Content Include="app\templates\registration1\login.html" />
     <Content Include="requirements.txt" />
     <Content Include="app\static\app\content\bootstrap.css" />
     <Content Include="app\static\app\content\bootstrap.min.css" />
