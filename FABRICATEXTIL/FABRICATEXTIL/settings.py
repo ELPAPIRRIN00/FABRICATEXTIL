@@ -95,3 +95,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Redirección al iniciar sesión
 LOGIN_REDIRECT_URL = '/inventario/productos/'   
+
+# Ajuste de codificación
