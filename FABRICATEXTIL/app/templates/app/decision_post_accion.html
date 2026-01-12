@@ -1,0 +1,58 @@
+{% extends "app/base.html" %}
+{% block title %}Acción Completada{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in-up" style="margin-top: 50px;">
+    <div class="col-md-6 text-center">
+
+        <!-- ÍCONO DE ÉXITO GIGANTE -->
+        <div class="mb-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+        </div>
+
+        <h2 class="fw-bold text-dark mb-3">¡Registro Exitoso!</h2>
+
+        <div class="alert alert-light border shadow-sm mb-5 d-inline-block px-4 py-2">
+            <span class="text-muted small d-block text-uppercase" style="letter-spacing: 1px;">Producto Actualizado</span>
+            <strong class="fs-5">{{ producto.nombre_tela }}</strong>
+            <div class="mt-1">
+                Nuevo Stock: <span class="text-primary fw-bold">{{ producto.pz }} pz</span>
+            </div>
+        </div>
+
+        <h5 class="text-muted mb-4">¿Qué deseas hacer ahora?</h5>
+
+        <!-- BOTONES DE DECISIÓN -->
+        <div class="d-grid gap-3">
+            <!-- Opción 1: Escanear Nuevo -->
+            <a href="{% url 'app:escaner_view' %}" class="btn btn-primary btn-lg py-3 shadow-sm rounded-pill">
+                <i class="bi bi-qr-code-scan me-2"></i> Escanear OTRO Producto
+            </a>
+
+            <!-- Opción 2: Salir -->
+            <a href="{% url 'app:index' %}" class="btn btn-outline-secondary btn-lg py-3 rounded-pill">
+                <i class="bi bi-house-door me-2"></i> Volver al Menú Principal
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

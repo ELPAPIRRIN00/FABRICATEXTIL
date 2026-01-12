@@ -1,71 +1,180 @@
-{% extends 'app/base.html' %}
+{% extends "app/base.html" %}
+{% load static %}
 
-{% block title %}Reportes de Inventario{% endblock %}
+{% block title %}Reportes y Métricas{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Reportes de Inventario</h1>
+<div class="fade-in-up">
 
-<div class="row">
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card text-white bg-primary shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-box-seam"></i> Productos Únicos</h5>
-                <p class="card-text fs-1 fw-bold">{{ total_productos_unicos }}</p>
+    <!-- ENCABEZADO -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Métricas de Inventario</h2>
+            <p class="text-muted small">Resumen en tiempo real de la bodega.</p>
+        </div>
+        <button class="btn btn-sm btn-outline-primary rounded-pill shadow-sm" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+        </button>
+    </div>
+
+    <!-- SECCIÓN 1: KPIs (TARJETAS GRANDES) -->
+    <div class="row g-4 mb-5">
+        <!-- Total Piezas -->
+        <div class="col-md-6">
+            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                    <i class="bi bi-layers-fill" style="font-size: 5rem; color: var(--primary-color);"></i>
+                </div>
+                <div class="card-icon-box text-white bg-primary bg-gradient shadow-sm me-3">
+                    <i class="bi bi-box-seam" style="font-size: 1.8rem;"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Stock Total</h6>
+                    <h2 class="display-5 fw-bold text-dark mb-0">{{ total_piezas }}</h2>
+                    <small class="text-success fw-bold"><i class="bi bi-graph-up-arrow"></i> Piezas Físicas</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Únicos -->
+        <div class="col-md-6">
+            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                    <i class="bi bi-tags-fill" style="font-size: 5rem; color: var(--secondary-color);"></i>
+                </div>
+                <div class="card-icon-box text-white bg-danger bg-gradient shadow-sm me-3">
+                    <i class="bi bi-palette" style="font-size: 1.8rem;"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Variedad</h6>
+                    <h2 class="display-5 fw-bold text-dark mb-0">{{ productos_unicos }}</h2>
+                    <small class="text-secondary fw-bold">Modelos (SKUs)</small>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card text-white bg-success shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-stack"></i> Total de Piezas en Stock</h5>
-                <p class="card-text fs-1 fw-bold">{{ total_piezas_stock }}</p>
+
+    <!-- SECCIÓN 2: DETALLES (GRID DIVIDIDO) -->
+    <div class="row g-4">
+
+        <!-- COLUMNA IZQUIERDA: TOP PRODUCTOS -->
+        <div class="col-lg-7">
+            <div class="card-modern p-4 h-100 bg-white">
+                <h5 class="fw-bold mb-4 d-flex align-items-center text-dark">
+                    <i class="bi bi-trophy-fill text-warning me-2"></i> Top Productos (Mayor Stock)
+                </h5>
+
+                <div class="list-group list-group-flush">
+                    {% for item in stock_por_modelo|slice:":5" %}
+                    <div class="list-group-item border-0 px-0 py-3 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="fw-bold text-muted me-3 fs-5" style="width: 25px;">{{ forloop.counter }}</div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold text-dark">{{ item.nombre_tela }}</div>
+                                <!-- Barra de progreso visual simulada -->
+                                <div class="progress mt-1" style="height: 6px; background-color: #f3f4f6;">
+                                    <div class="progress-bar bg-gradient-primary rounded-pill" role="progressbar"
+                                         style="width: 80%; opacity: 0.8;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end ms-3">
+                            <span class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-bold">
+                                {{ item.total_pz }} pz
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-4">No hay datos de stock aún.</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
+
+        <!-- COLUMNA DERECHA: HISTORIAL RECIENTE (TIMELINE) -->
+        <div class="col-lg-5">
+            <div class="card-modern p-4 h-100 bg-white">
+                <h5 class="fw-bold mb-4 d-flex align-items-center text-dark">
+                    <i class="bi bi-clock-history text-info me-2"></i> Últimos Movimientos
+                </h5>
+
+                <div class="timeline position-relative">
+                    {% for mov in ultimos_movimientos %}
+                    <div class="timeline-item pb-4 position-relative ps-4 border-start border-2 border-light">
+                        <!-- Punto del timeline -->
+                        <div class="position-absolute top-0 start-0 translate-middle rounded-circle border border-2 border-white shadow-sm
+                            {% if mov.tipo_movimiento == 'ENTRADA' %}bg-success{% else %}bg-danger{% endif %}"
+                             style="width: 14px; height: 14px; left: -1px;">
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge {% if mov.tipo_movimiento == 'ENTRADA' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} mb-1 border-0 fw-bold" style="font-size: 0.7rem;">
+                                    {{ mov.tipo_movimiento }}
+                                </span>
+                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;">{{ mov.producto.nombre_tela }}</h6>
+                                <small class="text-muted" style="font-size: 0.8rem;">
+                                    {% if mov.notas %}{{ mov.notas }}{% else %}Registro manual{% endif %}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="d-block fw-bold text-dark fs-5">
+                                    {% if mov.tipo_movimiento == 'ENTRADA' %}+{% else %}-{% endif %}{{ mov.cantidad }}
+                                </span>
+                                <small class="text-muted fw-medium" style="font-size: 0.7rem;">{{ mov.fecha|date:"H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted fs-1 d-block mb-2"></i>
+                        <p class="text-muted">Sin movimientos recientes.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
-<hr class="my-4">
+<style>
+    /* Estilos específicos para la línea de tiempo */
+    .timeline .timeline-item:last-child {
+        border-left: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    /* Fondos sutiles para badges */
+    .bg-success-subtle {
+        background-color: #dcfce7 !important;
+        color: #166534 !important;
+    }
 
-<div class="row">
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header">
-                <h5>Productos por Tipo</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    {% for item in productos_por_tipo %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ item.tipo }}
-                        <span class="badge bg-primary rounded-pill">{{ item.cantidad }}</span>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item">No hay datos.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
+    .bg-danger-subtle {
+        background-color: #fee2e2 !important;
+        color: #991b1b !important;
+    }
 
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header">
-                <h5>Últimos 5 Movimientos</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    {% for movimiento in ultimos_movimientos %}
-                    <li class="list-group-item">
-                        <span class="fw-bold">{{ movimiento.tipo_movimiento }} de {{ movimiento.cantidad }} pz</span>
-                        <small class="d-block text-muted">Producto: {{ movimiento.producto.sku }} | Por: {{ movimiento.usuario.username|default:'Sistema' }}</small>
-                        <small class="d-block text-muted">{{ movimiento.fecha_movimiento|date:"d M, Y H:i" }}</small>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item">No se han registrado movimientos.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
+    /* Gradiente personalizado para barra de progreso */
+    .bg-gradient-primary {
+        background: linear-gradient(90deg, var(--primary-color), #818cf8);
+    }
+
+    /* Animación de entrada */
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 {% endblock %}

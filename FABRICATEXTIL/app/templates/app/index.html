@@ -1,33 +1,133 @@
-{% extends "app/layout.html" %}
+{% extends "app/base.html" %}
+{% load static %}
+
+{% block title %}Panel de Control{% endblock %}
 
 {% block content %}
+<!-- ENCABEZADO -->
+<div class="text-center mb-4 fade-in-up">
+    <!-- Título que cambia de tamaño según la pantalla -->
+    <h1 class="display-6 fw-bold text-dark mb-1 d-none d-md-block">Panel de Control</h1>
 
-<div class="jumbotron">
-    <h1>Django</h1>
-    <p class="lead">Django is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="https://www.djangoproject.com/" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+    <!-- Saludo personalizado en móvil -->
+    <h3 class="fw-bold text-dark mb-1 d-block d-md-none">
+        Hola{% if user.is_authenticated %}, {{ user.username }}{% endif %}
+    </h3>
+
+    <p class="text-muted small">Inventario Textil</p>
 </div>
 
+<!-- GRID DE TARJETAS (Optimizado Móvil) -->
+<!-- 'row-cols-2' fuerza 2 columnas en celular, 'row-cols-lg-4' fuerza 4 en PC -->
+<div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
+
+    <!-- Tarjeta 1: Catálogo -->
+    <div class="col">
+        <a href="{% url 'app:lista_productos' %}" class="text-decoration-none">
+            <div class="card-modern h-100 p-3 p-md-4 d-flex flex-column align-items-center text-center">
+                <div class="card-icon-box text-primary bg-primary-subtle mb-2">
+                    <i class="bi bi-collection-fill"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Catálogo</h6>
+                <!-- Texto descriptivo solo visible en PC -->
+                <p class="text-muted small mb-0 d-none d-md-block">Ver productos.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Tarjeta 2: Nuevo Producto -->
+    <div class="col">
+        <a href="{% url 'app:crear_producto' %}" class="text-decoration-none">
+            <div class="card-modern h-100 p-3 p-md-4 d-flex flex-column align-items-center text-center">
+                <div class="card-icon-box text-success bg-success-subtle mb-2">
+                    <i class="bi bi-plus-circle-fill"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Nuevo</h6>
+                <p class="text-muted small mb-0 d-none d-md-block">Agregar material.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Tarjeta 3: Reportes -->
+    <div class="col">
+        <a href="{% url 'app:ver_reportes' %}" class="text-decoration-none">
+            <div class="card-modern h-100 p-3 p-md-4 d-flex flex-column align-items-center text-center">
+                <div class="card-icon-box text-warning bg-warning-subtle mb-2">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Datos</h6>
+                <p class="text-muted small mb-0 d-none d-md-block">Estadísticas.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Tarjeta 4: Escáner (Destacada) -->
+    <div class="col">
+        <a href="{% url 'app:escaner_view' %}" class="text-decoration-none">
+            <!-- Borde azul para destacar -->
+            <div class="card-modern h-100 p-3 p-md-4 d-flex flex-column align-items-center text-center border border-1 border-primary shadow-sm">
+                <div class="card-icon-box text-white bg-gradient-primary shadow-sm mb-2">
+                    <i class="bi bi-qr-code-scan"></i>
+                </div>
+                <h6 class="fw-bold text-primary mb-1">Escáner</h6>
+                <p class="text-muted small mb-0 d-none d-md-block">Escanear QR.</p>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+<!-- RESUMEN DE ESTADO -->
 <div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            Django gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="https://djangobook.com/django-tutorials/">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>The Python Package Index is a repository of software for the Python programming language.</p>
-        <p><a class="btn btn-default" href="https://pypi.org/">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Microsoft Azure</h2>
-        <p>You can easily publish to Microsoft Azure using Visual Studio. Find out how you can host your application using a free trial today.</p>
-        <p><a class="btn btn-default" href="http://azure.microsoft.com">Learn more &raquo;</a></p>
+    <div class="col-12">
+        <div class="card-modern p-3 d-flex align-items-center justify-content-between bg-white">
+
+            <!-- Izquierda: Estado Online -->
+            <div class="d-flex align-items-center gap-3">
+                <!-- Ícono solo visible en PC -->
+                <div class="p-2 rounded-circle bg-light text-secondary d-none d-md-block">
+                    <i class="bi bi-hdd-rack-fill fs-5"></i>
+                </div>
+                <div>
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 mb-1">
+                        <i class="bi bi-wifi me-1"></i> Online
+                    </span>
+                    <div class="text-muted small" style="font-size: 0.75rem;">Sistema activo</div>
+                </div>
+            </div>
+
+            <!-- Derecha: Contador Total -->
+            <div class="text-end">
+                <div class="fs-4 fw-bolder text-dark lh-1">{{ num_productos }}</div>
+                <small class="text-muted" style="font-size: 0.7rem;">Productos</small>
+            </div>
+
+        </div>
     </div>
 </div>
 
+<!-- Estilos extra para este archivo -->
+<style>
+    /* Animación suave al cargar */
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    /* Gradiente personalizado para el ícono de escáner */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        color: #4f46e5;
+    }
+</style>
 {% endblock %}

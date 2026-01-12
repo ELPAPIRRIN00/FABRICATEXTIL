@@ -1,20 +1,37 @@
-{% extends "app/layout.html" %}
+﻿{% extends "app/base.html" %} <!-- CORRECCI�N 1: Heredar de base.html -->
+{% block title %}Contacto{% endblock %}
 
 {% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <!-- El 'titulo' viene de tu views.py -->
+        <h2 class="mb-0">{{ titulo }}</h2>
+    </div>
+    <div class="card-body">
+        <p class="lead">Ponte en contacto con nosotros para soporte o preguntas generales.</p>
 
-<h2>{{ title }}.</h2>
-<h3>{{ message }}</h3>
-
-<address>
-    One Microsoft Way<br />
-    Redmond, WA 98052-6399<br />
-    <abbr title="Phone">P:</abbr>
-    425.555.0100
-</address>
-
-<address>
-    <strong>Support:</strong>   <a href="mailto:Support@example.com">Support@example.com</a><br />
-    <strong>Marketing:</strong> <a href="mailto:Marketing@example.com">Marketing@example.com</a>
-</address>
-
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="text-primary"><i class="bi bi-geo-alt-fill"></i> Nuestra Oficina</h5>
+                <address>
+                    <strong>Fabricatextil S.A. de C.V.</strong><br>
+                    Av. Reforma #123, Col. Centro<br>
+                    Puebla, PUE 72000<br>
+                    M�xico
+                </address>
+            </div>
+            <div class="col-md-6">
+                <h5 class="text-primary"><i class="bi bi-envelope-fill"></i> Correos</h5>
+                <address>
+                    <strong>Soporte T�cnico:</strong>
+                    <a href="mailto:soporte@fabricatextil.com">soporte@fabricatextil.com</a><br>
+                    <strong>Ventas:</strong>
+                    <a href="mailto:ventas@fabricatextil.com">ventas@fabricatextil.com</a>
+                </address>
+                <h5 class="text-primary mt-3"><i class="bi bi-telephone-fill"></i> Tel�fono</h5>
+                <p>+52 222 123 4567</p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

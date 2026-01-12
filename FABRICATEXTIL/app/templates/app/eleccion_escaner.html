@@ -1,0 +1,80 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Escanear{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos específicos para esta pantalla "Focus Mode" */
+    body {
+        background-color: #f8f9fa;
+        height: 100vh; /* Altura completa */
+        overflow: hidden; /* Evita scroll */
+    }
+
+    .focus-mode-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        position: relative;
+    }
+
+    /* Botón X para salir */
+    .btn-close-mode {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: #333;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .action-area {
+        position: absolute;
+        bottom: 40px;
+        width: 100%;
+        padding: 0 20px;
+        max-width: 500px; /* Evita que se estire demasiado en PC */
+    }
+</style>
+
+<div class="focus-mode-container fade-in-up">
+
+    <a href="{% url 'app:index' %}" class="btn-close-mode shadow-sm">
+        <i class="bi bi-x-lg"></i>
+    </a>
+
+    <div class="text-center mb-5">
+        <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm mb-4" style="width: 120px; height: 120px;">
+            <i class="bi bi-qr-code-scan text-primary" style="font-size: 3.5rem;"></i>
+        </div>
+        <h2 class="fw-bold text-dark mb-2">Modo Escáner</h2>
+        <p class="text-muted">Preparado para leer códigos</p>
+    </div>
+
+    <div class="action-area">
+        <a href="{% url 'app:camara_view' %}" class="btn btn-primary btn-lg w-100 py-3 rounded-4 shadow fw-bold text-uppercase">
+            <i class="bi bi-camera-fill me-2"></i> Iniciar Cámara
+        </a>
+        <p class="text-center mt-3 text-muted small" style="opacity: 0.7;">
+            <i class="bi bi-upc-scan me-1"></i> Sistema listo
+        </p>
+    </div>
+
+</div>
+{% endblock %}

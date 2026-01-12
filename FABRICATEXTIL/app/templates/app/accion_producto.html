@@ -1,0 +1,106 @@
+{% extends "app/base.html" %}
+{% load static %}
+
+{% block title %}Producto Escaneado: {{ producto.sku }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in-up">
+    <div class="col-md-8 col-lg-6">
+
+        <!-- TARJETA PRINCIPAL -->
+        <div class="card-modern bg-white p-4 text-center mx-auto shadow-lg border-0" style="max-width: 500px;">
+
+            <!-- ENCABEZADO DEL PRODUCTO -->
+            <div class="mb-4">
+                <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 mb-2">
+                    SKU: {{ producto.sku }}
+                </span>
+                <h2 class="fw-bold text-dark mb-0 text-truncate">{{ producto.nombre_tela }}</h2>
+                <small class="text-muted">{{ producto.color }}</small>
+            </div>
+
+            <!-- VISUALIZADOR DE STOCK (ESTILO HUD) -->
+            <div class="stock-hud py-4 mb-4 position-relative overflow-hidden rounded-4 bg-light">
+                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10"
+                     style="background: repeating-linear-gradient(45deg, #ccc 0px, #ccc 1px, transparent 1px, transparent 10px);"></div>
+
+                <p class="text-uppercase text-muted mb-0 fw-bold" style="font-size: 0.75rem; letter-spacing: 2px;">STOCK ACTUAL</p>
+                <div class="stock-number display-1 fw-bold text-primary position-relative z-1">
+                    {{ producto.pz }}
+                </div>
+                <small class="text-muted position-relative z-1">Piezas en Inventario</small>
+            </div>
+
+            <!-- MENSAJES DE CONFIRMACIÓN (FLOTANTES) -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                <div class="d-flex align-items-center justify-content-center">
+                    {% if message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                    {% else %}
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                    {% endif %}
+                    <div class="fw-bold">{{ message }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <hr class="opacity-10 my-4">
+
+            <!-- ÁREA DE ESPERA PARA SIGUIENTE ESCANEO -->
+            <div class="p-3 bg-primary-subtle rounded-3 text-primary border border-primary border-opacity-10">
+                <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></div>
+                <span class="fw-bold small text-uppercase ls-1">Listo para escanear</span>
+                <p class="small mb-0 mt-1 text-muted">Usa tu lector Bluetooth para el siguiente producto.</p>
+            </div>
+
+            <!-- PIE DE TARJETA -->
+            <div class="mt-4 pt-3 border-top border-light">
+                <a href="{% url 'app:escaner_view' %}" class="btn btn-link text-muted text-decoration-none small">
+                    <i class="bi bi-camera-video me-1"></i> Usar cámara del dispositivo
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos Específicos */
+
+    .stock-number {
+        font-family: 'Inter', sans-serif;
+        letter-spacing: -3px;
+        line-height: 1;
+    }
+
+    /* Animación de entrada */
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .ls-1 {
+        letter-spacing: 1px;
+    }
+
+    /* Fondo sutil */
+    .bg-primary-subtle {
+        background-color: #e0e7ff !important;
+    }
+</style>
+{% endblock %}

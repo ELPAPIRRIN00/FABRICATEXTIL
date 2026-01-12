@@ -43,7 +43,6 @@
     </Compile>
     <Compile Include="app\tests.py" />
     <Compile Include="app\views.py" />
-    <Compile Include="app\__init__.py" />
     <Compile Include="app\migrations\__init__.py" />
     <Compile Include="manage.py" />
     <Compile Include="FABRICATEXTIL\__init__.py" />
@@ -60,12 +59,14 @@
     <Folder Include="app\static\app\fonts\" />
     <Folder Include="app\static\app\images\" />
     <Folder Include="app\static\app\js\" />
+    <Folder Include="app\static\app\css\" />
     <Folder Include="app\static\app\scripts\" />
     <Folder Include="app\templates\" />
     <Folder Include="app\templates\app\" />
     <Folder Include="FABRICATEXTIL\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="app\static\app\css\style.css" />
     <Content Include="app\static\app\js\html5-qrcode.min.js" />
     <Content Include="app\templates\app\lista_productos.html" />
     <Content Include="app\templates\app\detalle_producto.html" />
@@ -75,6 +76,12 @@
     <Content Include="app\templates\app\eliminar_producto.html" />
     <Content Include="app\templates\app\escaner.html" />
     <Content Include="app\templates\app\reportes.html" />
+    <Content Include="app\templates\app\editar_producto.html" />
+    <Content Include="app\templates\app\registrar_movimiento.html" />
+    <Content Include="app\templates\app\accion_producto.html" />
+    <Content Include="app\templates\app\index.html" />
+    <Content Include="app\templates\app\producto_form.html" />
+    <Content Include="app\templates\app\decision_post_accion.html" />
     <Content Include="requirements.txt" />
     <Content Include="app\static\app\content\bootstrap.css" />
     <Content Include="app\static\app\content\bootstrap.min.css" />
@@ -100,10 +107,10 @@
     <Content Include="app\static\app\scripts\_references.js" />
     <Content Include="app\templates\app\about.html" />
     <Content Include="app\templates\app\contact.html" />
-    <Content Include="app\templates\app\index.html" />
     <Content Include="app\templates\app\layout.html" />
     <Content Include="app\templates\app\login.html" />
     <Content Include="app\templates\app\loginpartial.html" />
+    <Content Include="Procfile" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.html">

@@ -16,7 +16,14 @@
             <form method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
-                <a href="{% url 'lista_de_productos' %}" class="btn btn-secondary">No, Cancelar</a>
+
+                <!--
+                  CORRECCIÓN:
+                  1. Se añadió 'app:'.
+                  2. Se cambió a 'detalle_producto' (mejor UX).
+                  3. Se añadió el argumento 'sku=producto.sku'.
+                -->
+                <a href="{% url 'app:detalle_producto' sku=producto.sku %}" class="btn btn-secondary">No, Cancelar</a>
             </form>
         </div>
     </div>

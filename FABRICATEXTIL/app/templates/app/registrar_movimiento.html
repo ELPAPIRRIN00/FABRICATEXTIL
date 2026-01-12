@@ -1,0 +1,50 @@
+﻿{% extends "app/base.html" %} <!-- CORRECCI�N 1: Usar base.html -->
+{% block title %}{{ titulo }}{% endblock %} <!-- El t�tulo lo da la vista -->
+{% block content %}
+<div class="card shadow-sm">
+    <!-- El color del cabezado cambia si es Entrada (verde) o Salida (rojo) -->
+    <div class="card-header
+        {% if titulo == 'Registrar Entrada' %} bg-success text-white
+        {% elif titulo == 'Registrar Salida' %} bg-danger text-white
+        {% endif %}">
+        <h1 class="mb-0">{{ titulo }}</h1>
+    </div>
+    <div class="card-body">
+        <h4 class="mb-3">
+            Producto: {{ producto.nombre_tela }} (SKU: {{ producto.sku }})
+        </h4>
+        <p class="fs-5">
+            <strong>Stock Actual:</strong> {{ producto.pz }} piezas
+        </p>
+
+        <hr>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- 'form.as_p' renderiza autom�ticamente los campos 'cantidad' y 'notas' -->
+            {{ form.as_p }}
+
+            <hr>
+
+            <!-- Bot�n de confirmar con el color correspondiente -->
+            <button type="submit" class="btn
+                {% if titulo == 'Registrar Entrada' %} btn-success
+                {% elif titulo == 'Registrar Salida' %} btn-danger
+                {% else %} btn-primary
+                {% endif %}">
+                <i class="bi bi-check-circle"></i> Confirmar
+            </button>
+
+            <!--
+              CORRECCI�N 2:
+              1. Se a�adi� 'app:'.
+              2. Se cambi� 'producto.pk' a 'sku=producto.sku'.
+            -->
+            <a href="{% url 'app:detalle_producto' sku=producto.sku %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

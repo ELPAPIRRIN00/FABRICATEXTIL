@@ -1,126 +1,301 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+﻿# -*- coding: utf-8 -*-
+import json
+import os
+import google.generativeai as genai
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseRedirect, JsonResponse
+from django.db.models import Sum
+from django.urls import reverse
+from django.contrib import messages
+from django.utils import timezone
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+
 from .models import Producto, MovimientoInventario
-from .forms import ProductoForm, MovimientoForm
-from django.db.models import Count, Sum
+from .forms import ProductoForm, MovimientoForm, AjustarStockForm
 
-# --- VISTAS PRINCIPALES DE LA APLICACIÓN ---
+# --- CONFIGURACIÓN DE IA (Gemini) ---
+# Intenta obtener la API Key de las variables de entorno o usa una por defecto (CUIDADO en producción)
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'TU_API_KEY_AQUI') 
+genai.configure(api_key=GEMINI_API_KEY)
 
-def lista_productos(request):
-    """
-    Muestra la lista de todos los productos.
-    También maneja la lógica de búsqueda.
-    """
-    query = request.GET.get('q')
-    productos = Producto.objects.all().order_by('nombre_tela') # Ordenamos alfabéticamente
-    
-    if query:
-        productos = productos.filter(
-            Q(sku__icontains=query) | Q(nombre_tela__icontains=query)
-        )
-    
-    contexto = {
-        'productos': productos,
-        'query': query
-    }
-    return render(request, 'app/lista_productos.html', contexto)
-
-def detalle_producto(request, sku):
-    """ Muestra la información detallada de un solo producto. """
-    producto = get_object_or_404(Producto, sku=sku)
-    contexto = {
-        'producto': producto
-    }
-    return render(request, 'app/detalle_producto.html', contexto)
-
-# --- VISTAS PARA CREAR Y MODIFICAR ---
+# --- Vistas de Producto (CRUD) ---
 
 @login_required
 def crear_producto(request):
-    """ Muestra el formulario para crear un nuevo producto y lo guarda. """
     if request.method == 'POST':
         form = ProductoForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('lista_de_productos')
+            producto_nuevo = form.save()
+            return redirect('app:detalle_producto', sku=producto_nuevo.sku)
     else:
         form = ProductoForm()
-    
-    return render(request, 'app/crear_producto.html', {'form': form})
+    contexto = { 'form': form, 'titulo': 'Crear Nuevo Producto' }
+    return render(request, 'app/producto_form.html', contexto)
+
+
+def detalle_producto(request, sku):
+    producto = get_object_or_404(Producto, sku=sku)
+
+    url_info = request.build_absolute_uri(
+        reverse('app:detalle_producto', args=[producto.sku])
+    )
+    url_accion = request.build_absolute_uri(
+        reverse('app:accion_producto', args=[producto.sku])
+    )
+
+    contexto = {
+        'producto': producto,
+        'url_qr_info': url_info,
+        'url_qr_accion': url_accion
+    }
+    return render(request, 'app/detalle_producto.html', contexto)
+
 
 @login_required
-def ajustar_stock(request, sku):
-    """ Permite registrar entradas y salidas de stock para un producto. """
+def editar_producto(request, sku):
     producto = get_object_or_404(Producto, sku=sku)
-    
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect('app:detalle_producto', sku=producto.sku)
+    else:
+        form = ProductoForm(instance=producto)
+    contexto = { 'form': form, 'titulo': f'Editando: {producto.sku}', 'producto': producto }
+    return render(request, 'app/producto_form.html', contexto)
+
+
+@login_required
+def eliminar_producto(request, sku):
+    producto = get_object_or_404(Producto, sku=sku)
+    if request.method == 'POST':
+        producto.delete()
+        return redirect('app:lista_productos')
+    contexto = { 'producto': producto, 'titulo': f'Confirmar Eliminación' }
+    return render(request, 'app/eliminar_producto.html', contexto)
+
+
+def lista_productos(request):
+    query = request.GET.get('q')
+    if query:
+        # Búsqueda básica por nombre o SKU
+        productos = Producto.objects.filter(nombre_tela__icontains=query) | Producto.objects.filter(sku__icontains=query)
+    else:
+        productos = Producto.objects.all()
+        
+    productos = productos.order_by('nombre_tela') 
+    contexto = { 'productos': productos, 'query': query }
+    return render(request, 'app/lista_productos.html', contexto)
+
+
+# --- Vistas de Inventario (Manuales - Admin) ---
+
+@login_required
+def registrar_entrada(request, producto_sku):
+    producto = get_object_or_404(Producto, sku=producto_sku)
     if request.method == 'POST':
         form = MovimientoForm(request.POST)
         if form.is_valid():
             movimiento = form.save(commit=False)
             movimiento.producto = producto
-            movimiento.usuario = request.user
-            
-            cantidad_movida = abs(movimiento.cantidad) # Usamos el valor absoluto
-
-            if 'entrada' in request.POST:
-                producto.pz += cantidad_movida
-                movimiento.tipo_movimiento = 'Entrada'
-                movimiento.cantidad = cantidad_movida
-            elif 'salida' in request.POST:
-                if cantidad_movida <= producto.pz:
-                    producto.pz -= cantidad_movida
-                    movimiento.tipo_movimiento = 'Salida'
-                    movimiento.cantidad = cantidad_movida
-                else:
-                    # Opcional: Manejar el error si se intenta sacar más stock del que hay
-                    # Por ahora, simplemente no hacemos nada si no hay stock suficiente.
-                    pass
-            
-            producto.save()
+            movimiento.tipo_movimiento = 'ENTRADA'
+            # Asignar usuario si está disponible (mejora de auditoría)
+            if request.user.is_authenticated:
+                movimiento.usuario = request.user
             movimiento.save()
-            return redirect('detalle_producto', sku=producto.sku)
+            
+            cantidad_entrada = form.cleaned_data.get('cantidad', 0)
+            producto.pz += cantidad_entrada
+            producto.save()
+            
+            return redirect('app:detalle_producto', sku=producto.sku)
     else:
         form = MovimientoForm()
-        
-    return render(request, 'app/ajustar_stock.html', {
-        'form': form,
-        'producto': producto
-    })
+    contexto = { 'form': form, 'producto': producto, 'titulo': 'Registrar Entrada' }
+    return render(request, 'app/registrar_movimiento.html', contexto)
+
 
 @login_required
-def eliminar_producto(request, sku):
-    """ Muestra la página de confirmación y elimina un producto. """
+def registrar_salida(request, producto_sku):
+    producto = get_object_or_404(Producto, sku=producto_sku)
+    if request.method == 'POST':
+        form = MovimientoForm(request.POST)
+        if form.is_valid():
+            movimiento = form.save(commit=False)
+            movimiento.producto = producto
+            movimiento.tipo_movimiento = 'SALIDA'
+            cantidad_salida = form.cleaned_data.get('cantidad', 0)
+            
+            if producto.pz >= cantidad_salida:
+                if request.user.is_authenticated:
+                    movimiento.usuario = request.user
+                movimiento.save()
+                producto.pz -= cantidad_salida
+                producto.save()
+                return redirect('app:detalle_producto', sku=producto.sku)
+            else:
+                form.add_error(None, f"No hay stock suficiente ({producto.pz})")
+    else:
+        form = MovimientoForm()
+    contexto = { 'form': form, 'producto': producto, 'titulo': 'Registrar Salida' }
+    return render(request, 'app/registrar_movimiento.html', contexto)
+
+
+# --- VISTA QR ACCIÓN (CON PANTALLA DE DECISIÓN) ---
+
+def accion_producto(request, sku):
+    producto = get_object_or_404(Producto, sku=sku)
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+        cantidad = 1
+        hora = timezone.now().strftime("%H:%M:%S")
+        usuario_actual = request.user if request.user.is_authenticated else None
+
+        if accion == 'entrada':
+            producto.pz += cantidad
+            producto.save()
+            MovimientoInventario.objects.create(
+                producto=producto, tipo_movimiento='ENTRADA', cantidad=cantidad, notas="QR Pieza única", usuario=usuario_actual
+            )
+
+        elif accion == 'salida':
+            if producto.pz >= cantidad:
+                producto.pz -= cantidad
+                producto.save()
+                MovimientoInventario.objects.create(
+                    producto=producto, tipo_movimiento='SALIDA', cantidad=cantidad, notas="QR Pieza única", usuario=usuario_actual
+                )
+            else:
+                messages.error(request, f"❌ ERROR: Stock insuficiente ({producto.pz})")
+                return redirect('app:accion_producto', sku=sku)
+
+        # Redirigir a pantalla de decisión
+        return render(request, 'app/decision_post_accion.html', {'producto': producto})
+
+    contexto = { 'producto': producto }
+    return render(request, 'app/accion_producto.html', contexto)
+
+
+@login_required
+def ajustar_stock(request, sku):
     producto = get_object_or_404(Producto, sku=sku)
     if request.method == 'POST':
-        producto.delete()
-        return redirect('lista_de_productos')
-    return render(request, 'app/eliminar_producto.html', {'producto': producto})
+        form = AjustarStockForm(request.POST)
+        if form.is_valid():
+            nueva_cantidad = form.cleaned_data['nueva_cantidad']
+            cantidad_actual = producto.pz
+            diferencia = nueva_cantidad - cantidad_actual
+            if diferencia != 0:
+                tipo_mov = 'ENTRADA' if diferencia > 0 else 'SALIDA'
+                MovimientoInventario.objects.create(
+                    producto=producto,
+                    tipo_movimiento=tipo_mov,
+                    cantidad=abs(diferencia),
+                    notas=f"Ajuste manual. Anterior: {cantidad_actual}",
+                    usuario=request.user
+                )
+            producto.pz = nueva_cantidad
+            producto.save()
+            return redirect('app:detalle_producto', sku=producto.sku)
+    else:
+        form = AjustarStockForm(initial={'nueva_cantidad': producto.pz})
+    contexto = { 'form': form, 'producto': producto, 'titulo': 'Ajustar Stock' }
+    return render(request, 'app/ajustar_stock.html', contexto)
 
-# --- VISTAS DE HERRAMIENTAS ---
 
-def escaner_view(request):
-    """ Muestra la página con el escáner de QR. """
-    return render(request, 'app/escaner.html')
+# --- Vistas Estáticas y Reportes ---
 
+def index(request):
+    num_productos = Producto.objects.count()
+    contexto = { 'titulo': 'Inicio', 'num_productos': num_productos }
+    return render(request, 'app/index.html', contexto)
 
-def reportes_view(request):
-    # Consulta 1: Contar el número total de tipos de producto
-    total_productos_unicos = Producto.objects.count()
+def about(request):
+    return render(request, 'app/about.html', {'titulo': 'Acerca de'})
 
-    # Consulta 2: Sumar el total de piezas de todos los productos
-    total_piezas_stock = Producto.objects.aggregate(total=Sum('pz'))['total'] or 0
+def contact(request):
+    return render(request, 'app/contact.html', {'titulo': 'Contacto'})
 
-    # Consulta 3: Agrupar por 'tipo' y contar cuántos productos hay en cada grupo
-    productos_por_tipo = Producto.objects.values('tipo').annotate(cantidad=Count('tipo')).order_by('-cantidad')
+@login_required
+def ver_reportes(request):
+    # Filtros de fecha
+    fecha_inicio_str = request.GET.get('fecha_inicio')
+    fecha_fin_str = request.GET.get('fecha_fin')
+    
+    movimientos_query = MovimientoInventario.objects.all()
 
-    # Consulta 4: Obtener los 5 movimientos de inventario más recientes
-    ultimos_movimientos = MovimientoInventario.objects.order_by('-fecha_movimiento')[:5]
+    if fecha_inicio_str and fecha_fin_str:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d')
+            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d')
+            fecha_fin = fecha_fin + timedelta(days=1) - timedelta(seconds=1)
+            movimientos_query = movimientos_query.filter(fecha__range=[fecha_inicio, fecha_fin])
+        except ValueError:
+            pass
+    
+    ultimos_movimientos = movimientos_query.order_by('-fecha')[:50]
+
+    total_piezas = Producto.objects.aggregate(total=Sum('pz'))['total'] or 0
+    productos_unicos = Producto.objects.count()
+    stock_por_modelo = Producto.objects.values('nombre_tela').annotate(total_pz=Sum('pz')).order_by('-total_pz')
 
     contexto = {
-        'total_productos_unicos': total_productos_unicos,
-        'total_piezas_stock': total_piezas_stock,
-        'productos_por_tipo': productos_por_tipo,
+        'titulo': 'Reportes',
+        'total_piezas': total_piezas,
+        'productos_unicos': productos_unicos,
+        'stock_por_modelo': stock_por_modelo,
         'ultimos_movimientos': ultimos_movimientos,
+        'fecha_inicio': fecha_inicio_str,
+        'fecha_fin': fecha_fin_str,
     }
     return render(request, 'app/reportes.html', contexto)
+
+# --- Vistas del Escáner ---
+
+def escaner_view(request):
+    """
+    1. Esta vista se activa con el botón del MENÚ.
+    Muestra la pantalla de elección (eleccion_escaner.html).
+    """
+    return render(request, 'app/eleccion_escaner.html', {'titulo': 'Escanear'})
+
+def camara_view(request):
+    """
+    2. Esta vista se activa con el botón "Abrir Cámara".
+    Muestra la pantalla negra de la cámara (escaner.html).
+    """
+    return render(request, 'app/escaner.html', {'titulo': 'Cámara Activa'})
+
+
+# --- API PARA IA (GEMINI) ---
+
+@login_required
+def generar_descripcion_api(request):
+    """
+    Recibe un prompt en JSON, llama a Gemini y devuelve la respuesta.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            prompt = data.get('prompt', '')
+            
+            if not prompt:
+                return JsonResponse({'error': 'No prompt provided'}, status=400)
+
+            # Configuración del modelo (Gemini Pro)
+            model = genai.GenerativeModel('gemini-pro')
+            
+            # Generar contenido
+            response = model.generate_content(prompt)
+            texto_generado = response.text
+
+            return JsonResponse({'descripcion': texto_generado})
+
+        except Exception as e:
+            print(f"Error Gemini API: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid method'}, status=405) 

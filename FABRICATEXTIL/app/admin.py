@@ -1,8 +1,13 @@
 ﻿from django.contrib import admin
-from .models import Producto, Categoria, Proveedor
+# --- CORRECCIÓN 1 ---
+# Importamos SOLO los modelos que SÍ existen: Producto y MovimientoInventario
+from .models import Producto, MovimientoInventario
 
+# --- CORRECCIÓN 2 ---
+# Usamos el decorador @admin.register, es la forma moderna.
+@admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    # Organiza el formulario en secciones con los campos CORRECTOS
+    # Organiza el formulario en secciones
     fieldsets = [
         ('Identificación Principal', {
             'fields': ('sku', 'nombre_tela', 'tipo')
@@ -11,23 +16,45 @@ class ProductoAdmin(admin.ModelAdmin):
             'fields': ('composicion', 'color')
         }),
         ('Dimensiones y Stock', {
-            'fields': (('largo', 'ancho'), ('pz', 'peso_por_pz'), 'peso_aprox')
+            # --- CORRECCIÓN 3 ---
+            # Corregimos el typo a 'peso_por_pieza' (como en models.py)
+            'fields': (('largo', 'ancho'), ('pz', 'peso_por_pieza'), 'peso_aprox')
+        }),
+        # --- CORRECCIÓN 4 ---
+        # Añadimos los NUEVOS campos de la tabla en su propia sección
+        ('Datos de Empaque (de la Tabla)', {
+            'fields': ('paquete_pz', 'paquetes_bulto', 'bulto_pz')
         }),
         ('Notas Adicionales', {
-            'fields': ('descripcion',)
+            # Añadimos 'ubicacion' que faltaba aquí
+            'fields': ('ubicacion', 'descripcion',)
         }),
     ]
-    # Columnas que se verán en la lista de productos (también corregido)
-    list_display = ('sku', 'nombre_tela', 'tipo', 'color', 'pz', 'largo', 'ancho', 'peso_aprox')
+    
+    # Columnas que se verán en la lista de productos
+    # --- CORRECCIÓN 5 ---
+    # Añadimos los nuevos campos a la lista
+    list_display = (
+        'sku', 'nombre_tela', 'tipo', 'color', 'pz', 
+        'paquete_pz', 'bulto_pz', 'ubicacion'
+    )
+    
     # Añade filtros útiles
-    list_filter = ('tipo', 'color', 'composicion')
+    list_filter = ('tipo', 'color', 'composicion', 'ubicacion')
     # Añade una barra de búsqueda
     search_fields = ('sku', 'nombre_tela')
 
 
-# Le decimos a Django que use nuestra clase personalizada para el modelo Producto
-admin.site.register(Producto, ProductoAdmin)
+# --- CORRECCIÓN 6 ---
+# Registramos el modelo de Movimientos para verlo en el Admin
+@admin.register(MovimientoInventario)
+class MovimientoInventarioAdmin(admin.ModelAdmin):
+    list_display = ('fecha', 'producto', 'tipo_movimiento', 'cantidad', 'notas')
+    list_filter = ('tipo_movimiento', 'fecha')
+    search_fields = ('producto__sku', 'producto__nombre_tela', 'notas')
+    date_hierarchy = 'fecha'
 
-# Registramos los otros modelos de forma simple
-admin.site.register(Categoria)
-admin.site.register(Proveedor)
+# --- CORRECCIÓN 7 ---
+# Eliminamos las líneas que daban error
+# admin.site.register(Categoria)  <-- ELIMINADO (daba error)
+# admin.site.register(Proveedor) <-- ELIMINADO (daba error)
