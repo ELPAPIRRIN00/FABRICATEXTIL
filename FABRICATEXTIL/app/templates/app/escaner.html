@@ -1,3 +1,66 @@
+{% extends "app/base.html" %}
+{% load static %}
+
+{% block title %}Escanear Producto{% endblock %}
+
+{% block content %}
+<div class="container fade-in-up mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card-modern bg-white shadow-lg border-0 overflow-hidden">
+                <div class="card-header bg-dark text-white text-center py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-qr-code-scan me-2"></i> Escáner Activo</h5>
+                </div>
+
+                <div class="card-body p-0">
+                    <div id="reader" style="width: 100%; min-height: 350px; background: #000; position: relative;">
+                        <div class="text-white position-absolute top-50 start-50 translate-middle text-center" style="z-index: 1;">
+                            <div class="spinner-border text-light mb-2" role="status"></div>
+                            <p class="small">Iniciando cámara...</p>
+                        </div>
+                    </div>
+
+                    <div id="status-message" class="text-center p-3 text-muted small bg-light border-top">
+                        <i class="bi bi-camera-video"></i> Esperando permisos...
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white p-3 text-center">
+                    <a href="{% url 'app:lista_productos' %}" class="btn btn-outline-secondary rounded-pill w-100">
+                        <i class="bi bi-arrow-left"></i> Cancelar / Volver
+                    </a>
+                </div>
+            </div>
+
+            <div class="text-center mt-3 text-muted opacity-75 small">
+                <p>Apunta la cámara al código QR del producto.</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Ocultar elementos feos de la librería original */
+    #reader__dashboard_section_csr span,
+    #reader__dashboard_section_swaplink {
+        display: none !important;
+    }
+
+    /* Botón de permiso estilizado (por si aparece) */
+    #reader__dashboard_section_csr button {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 50px;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
 {% block scripts %}
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
@@ -5,49 +68,49 @@
     document.addEventListener('DOMContentLoaded', function () {
         const statusMsg = document.getElementById('status-message');
 
-        // 1. Verificación de seguridad
+        // 2. Verificar si la librería cargó
         if (typeof Html5QrcodeScanner === 'undefined') {
-            statusMsg.innerHTML = '<span class="text-danger fw-bold">Error: Librería no cargada. Revisa tu conexión.</span>';
+            statusMsg.innerHTML = '<span class="text-danger fw-bold">⚠️ Error de conexión: No cargó el escáner.</span>';
             return;
         }
 
         function onScanSuccess(decodedText, decodedResult) {
+            // ÉXITO: Se leyó un código
             console.log(`Código escaneado: ${decodedText}`);
             html5QrcodeScanner.clear();
 
-            statusMsg.innerHTML = '<span class="text-success fw-bold">¡Código detectado! Procesando...</span>';
+            statusMsg.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> ¡Código detectado!</span>';
 
-            // Lógica de redirección inteligente
+            // Redirección
             if (decodedText.startsWith('http')) {
                 window.location.href = decodedText;
             } else {
-                // Ajusta esta URL a tu buscador
                 const baseUrl = "{% url 'app:lista_productos' %}";
                 window.location.href = `${baseUrl}?q=${decodedText}`;
             }
         }
 
         function onScanFailure(error) {
-            // console.warn(`Code scan error = ${error}`);
+            // Fallo silencioso (común mientras busca)
         }
 
-        // 2. CONFIGURACIÓN CORREGIDA PARA MOVILES
+        // 3. CONFIGURACIÓN FINAL (Cámara trasera forzada)
         let config = {
             fps: 10,
             qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0,
-            // ESTO ES LO NUEVO: Forzamos la cámara trasera
             videoConstraints: {
-                facingMode: "environment"
+                facingMode: "environment" // <--- ESTO ACTIVA LA CÁMARA TRASERA
             }
         };
 
-        // 3. Iniciar
+        // 4. Iniciar escáner
         try {
             var html5QrcodeScanner = new Html5QrcodeScanner("reader", config, false);
             html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-            statusMsg.innerText = "Cámara activa. Apunta al código.";
+            statusMsg.innerText = "Cámara activa. Escanea ahora.";
         } catch (e) {
+            console.error(e);
             statusMsg.innerHTML = '<span class="text-danger">Error: ' + e.message + '</span>';
         }
     });
