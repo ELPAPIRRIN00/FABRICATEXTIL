@@ -10,112 +10,133 @@
 
             <div class="card-modern bg-white shadow-lg border-0 overflow-hidden">
                 <div class="card-header bg-dark text-white text-center py-3">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-qr-code-scan me-2"></i> Escáner Activo</h5>
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-qr-code-scan me-2"></i> Escáner Rápido</h5>
                 </div>
 
-                <div class="card-body p-0">
-                    <div id="reader" style="width: 100%; min-height: 350px; background: #000; position: relative;">
-                        <div class="text-white position-absolute top-50 start-50 translate-middle text-center" style="z-index: 1;">
-                            <div class="spinner-border text-light mb-2" role="status"></div>
-                            <p class="small">Iniciando cámara...</p>
-                        </div>
+                <div class="card-body p-0 position-relative bg-black" style="min-height: 400px;">
+                    <video id="scan-video"
+                           class="w-100 h-100"
+                           style="object-fit: cover; position: absolute; top: 0; left: 0;"
+                           playsinline
+                           muted
+                           autoplay></video>
+
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center pointer-events-none">
+                        <div style="width: 250px; height: 250px; border: 4px solid rgba(255, 255, 255, 0.7); border-radius: 15px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);"></div>
                     </div>
 
-                    <div id="status-message" class="text-center p-3 text-muted small bg-light border-top">
-                        <i class="bi bi-camera-video"></i> Esperando permisos...
+                    <div id="loading-msg" class="position-absolute top-50 start-50 translate-middle text-white text-center">
+                        <div class="spinner-border text-light mb-2"></div>
+                        <p class="small">Iniciando cámara...</p>
                     </div>
                 </div>
 
-                <div class="card-footer bg-white p-3 text-center">
-                    <a href="{% url 'app:lista_productos' %}" class="btn btn-outline-secondary rounded-pill w-100">
-                        <i class="bi bi-arrow-left"></i> Cancelar / Volver
+                <div class="card-footer bg-white p-3 text-center z-index-1">
+                    <div id="scan-result" class="text-muted small mb-3 fw-bold">Buscando código...</div>
+                    <a href="{% url 'app:lista_productos' %}" class="btn btn-outline-danger rounded-pill w-100">
+                        <i class="bi bi-x-circle"></i> Cancelar
                     </a>
                 </div>
             </div>
 
-            <div class="text-center mt-3 text-muted opacity-75 small">
-                <p>Apunta la cámara al código QR del producto.</p>
+            <div class="text-center mt-3">
+                <button id="switch-cam" class="btn btn-sm btn-dark rounded-pill shadow-sm" style="display: none;">
+                    <i class="bi bi-arrow-repeat"></i> Cambiar Cámara
+                </button>
             </div>
 
         </div>
     </div>
 </div>
-
-<style>
-    /* Ocultar elementos feos de la librería original */
-    #reader__dashboard_section_csr span,
-    #reader__dashboard_section_swaplink {
-        display: none !important;
-    }
-
-    /* Botón de permiso estilizado (por si aparece) */
-    #reader__dashboard_section_csr button {
-        background-color: #0d6efd;
-        color: white;
-        border: none;
-        padding: 8px 20px;
-        border-radius: 50px;
-        margin-top: 10px;
-        font-size: 0.9rem;
-    }
-</style>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script type="module">
+    import QrScanner from 'https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js';
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const statusMsg = document.getElementById('status-message');
+    // Configuración del Worker (necesario para velocidad)
+    QrScanner.WORKER_PATH = 'https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js';
 
-        // 1. Verificación
-        if (typeof Html5QrcodeScanner === 'undefined') {
-            statusMsg.innerHTML = '<span class="text-danger">⚠️ Error de conexión.</span>';
-            return;
-        }
+    const videoElem = document.getElementById('scan-video');
+    const resultElem = document.getElementById('scan-result');
+    const loadingMsg = document.getElementById('loading-msg');
+    const switchBtn = document.getElementById('switch-cam');
 
-        function onScanSuccess(decodedText, decodedResult) {
-            console.log(`Código: ${decodedText}`);
-            html5QrcodeScanner.clear();
+    let qrScanner;
 
-            statusMsg.innerHTML = '<span class="text-success fw-bold">✅ ¡Código detectado!</span>';
+    // Función que se ejecuta al detectar un código
+    const setResult = (result) => {
+        console.log('Resultado:', result);
 
-            // Vibración de éxito (si el móvil lo soporta)
-            if (navigator.vibrate) navigator.vibrate(200);
+        // Detener escáner para evitar dobles lecturas
+        qrScanner.stop();
 
+        // Efecto visual y feedback
+        resultElem.className = "text-success fw-bold mb-3";
+        resultElem.innerHTML = `<i class="bi bi-check-circle-fill"></i> ¡Leído! Procesando...`;
+
+        if (navigator.vibrate) navigator.vibrate(200);
+
+        // Procesar el texto (data) del resultado
+        const decodedText = result.data || result; // A veces viene en objeto, a veces string
+
+        setTimeout(() => {
             if (decodedText.startsWith('http')) {
                 window.location.href = decodedText;
             } else {
                 const baseUrl = "{% url 'app:lista_productos' %}";
                 window.location.href = `${baseUrl}?q=${decodedText}`;
             }
-        }
+        }, 300); // Pequeña pausa para que el usuario vea el check verde
+    };
 
-        function onScanFailure(error) {
-            // No hacemos nada para no saturar
-        }
-
-        // 2. CONFIGURACIÓN ESPECIAL PARA IPHONE / IOS
-        // Eliminamos el 'aspectRatio' para evitar la pantalla negra
-        let config = {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            // IMPORTANTE: Aquí está el cambio.
-            // Quitamos restricciones complejas y pedimos solo la cámara trasera básica.
-            videoConstraints: {
-                facingMode: "environment",
-                focusMode: "continuous" // Intenta enfocar siempre
-            }
-        };
-
-        // 3. INICIO CON MANEJO DE ERRORES MEJORADO
+    // Iniciar escáner
+    document.addEventListener('DOMContentLoaded', async () => {
         try {
-            var html5QrcodeScanner = new Html5QrcodeScanner("reader", config, false);
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-            statusMsg.innerText = "Cámara activa. Escanea ahora.";
+            qrScanner = new QrScanner(
+                videoElem,
+                result => setResult(result),
+                {
+                    // Preferir cámara trasera ('environment')
+                    preferredCamera: 'environment',
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                }
+            );
+
+            await qrScanner.start();
+
+            // Si arrancó bien, ocultamos el spinner
+            loadingMsg.style.display = 'none';
+
+            // Verificar si hay más cámaras para mostrar botón de cambio
+            const cameras = await QrScanner.listCameras(true);
+            if (cameras.length > 1) {
+                switchBtn.style.display = 'inline-block';
+            }
+
         } catch (e) {
-            statusMsg.innerHTML = '<span class="text-danger">Error: ' + e.message + '</span>';
+            console.error(e);
+            loadingMsg.innerHTML = `<span class="text-danger">Error: ${e}</span>`;
+            // Si falla, a veces es porque está en 'user' en vez de 'environment', intentamos auto
         }
+    });
+
+    // Lógica del botón cambiar cámara
+    if (switchBtn) {
+        switchBtn.addEventListener('click', () => {
+            // Simplemente cambiamos a la siguiente cámara disponible
+            if (qrScanner) {
+                qrScanner.setCamera('next').then(() => {
+                    // Cámara cambiada
+                });
+            }
+        });
+    }
+
+    // Limpieza al salir de la página (Importante para SPA o caché)
+    window.addEventListener('beforeunload', () => {
+        if (qrScanner) qrScanner.destroy();
     });
 </script>
 {% endblock %}
