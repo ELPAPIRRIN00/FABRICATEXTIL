@@ -4,250 +4,112 @@
 {% block title %}Escanear Producto{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center fade-in-up">
-    <div class="col-md-8 col-lg-6">
+<div class="container fade-in-up mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
 
-        <!-- ENCABEZADO -->
-        <div class="text-center mb-4">
-            <h2 class="fw-bold text-dark mb-1">Escáner Activo</h2>
-            <p class="text-muted small">Apunta la cámara al código QR.</p>
-        </div>
-
-        <!-- TARJETA DEL ESCÁNER (DISEÑO HUD) -->
-        <div class="card-modern bg-white p-0 overflow-hidden position-relative shadow-lg border-0 mx-auto" style="max-width: 450px;">
-
-            <!-- ÁREA DE VIDEO Y HUD -->
-            <!-- Altura dinámica: 50% de la pantalla o mínimo 350px -->
-            <div class="scanner-viewport position-relative d-flex align-items-center justify-content-center bg-dark"
-                 style="height: 50vh; min-height: 350px;">
-
-                <!-- VIDEO DE LA CÁMARA (Instascan) -->
-                <!-- Se estira para cubrir todo el fondo -->
-                <video id="preview"
-                       class="position-absolute w-100 h-100"
-                       style="object-fit: cover;"
-                       data-redirect-url="{% url 'app:detalle_producto' sku='SKU_JS' %}">
-                </video>
-
-                <!-- EFECTO HUD (Cuadro de enfoque) -->
-                <!-- 'pointer-events-none' permite hacer clic a través de él si fuera necesario -->
-                <div class="scan-frame position-relative pointer-events-none">
-                    <!-- Esquinas iluminadas -->
-                    <div class="corner top-left"></div>
-                    <div class="corner top-right"></div>
-                    <div class="corner bottom-left"></div>
-                    <div class="corner bottom-right"></div>
-
-                    <!-- Láser animado -->
-                    <div class="scan-laser"></div>
+            <div class="card-modern bg-white shadow-lg border-0 overflow-hidden">
+                <div class="card-header bg-dark text-white text-center py-3">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-qr-code-scan me-2"></i> Escáner Activo</h5>
                 </div>
 
-                <!-- MENSAJE DE ESTADO FLOTANTE -->
-                <div id="status-msg" class="position-absolute bottom-0 mb-4 text-white opacity-90 small fw-bold bg-black bg-opacity-50 px-3 py-1 rounded-pill">
-                    <i class="bi bi-camera-video-fill me-2"></i> Iniciando cámara...
+                <div class="card-body p-0">
+                    <div id="reader" style="width: 100%; min-height: 300px; background: #000;"></div>
+
+                    <div id="status-message" class="text-center p-3 text-muted small">
+                        Esperando permiso de cámara...
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-top p-3 text-center">
+                    <a href="{% url 'app:lista_productos' %}" class="btn btn-outline-secondary rounded-pill w-100">
+                        Cancelar / Volver
+                    </a>
                 </div>
             </div>
 
-            <!-- PIE DE TARJETA CON RESULTADOS -->
-            <div class="p-4 text-center bg-white">
-
-                <!-- Aquí se inyectan las alertas de éxito/error -->
-                <div id="result" class="mb-3"></div>
-
-                <a href="{% url 'app:lista_productos' %}" class="btn btn-light text-muted w-100 rounded-pill fw-semibold border py-3 shadow-sm">
-                    <i class="bi bi-arrow-left me-2"></i> Cancelar y Volver
-                </a>
+            <div class="text-center mt-3 text-muted opacity-75 small">
+                <p>Apunta la cámara al código QR del producto.<br>Asegúrate de tener buena iluminación.</p>
             </div>
-        </div>
 
+        </div>
     </div>
 </div>
 
-<!-- ESTILOS ESPECÍFICOS PARA EL HUD -->
 <style>
-    /* El cuadro central de enfoque */
-    .scan-frame {
-        /* Tamaño responsivo: En PC 250px, en celular 65% del ancho */
-        width: 65vw;
-        height: 65vw;
-        max-width: 250px;
-        max-height: 250px;
-        /* Sombra gigante que oscurece el resto del video */
-        box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.6);
-        z-index: 10;
-        border-radius: 20px;
-        position: relative;
+    /* Ocultar elementos innecesarios que genera la librería por defecto */
+    #reader__dashboard_section_csr span,
+    #reader__dashboard_section_swaplink {
+        display: none !important;
     }
 
-    .pointer-events-none {
-        pointer-events: none;
-    }
-
-    /* Estilo de las esquinas brillantes */
-    .corner {
-        position: absolute;
-        width: 35px;
-        height: 35px;
-        border: 4px solid #4f46e5; /* Color primario neón */
-        border-radius: 4px;
-        box-shadow: 0 0 15px rgba(79, 70, 229, 0.6);
-    }
-    /* Posicionamiento exacto de cada esquina */
-    .top-left {
-        top: -2px;
-        left: -2px;
-        border-right: none;
-        border-bottom: none;
-        border-top-left-radius: 20px;
-    }
-
-    .top-right {
-        top: -2px;
-        right: -2px;
-        border-left: none;
-        border-bottom: none;
-        border-top-right-radius: 20px;
-    }
-
-    .bottom-left {
-        bottom: -2px;
-        left: -2px;
-        border-right: none;
-        border-top: none;
-        border-bottom-left-radius: 20px;
-    }
-
-    .bottom-right {
-        bottom: -2px;
-        right: -2px;
-        border-left: none;
-        border-top: none;
-        border-bottom-right-radius: 20px;
-    }
-
-    /* Animación del Láser Rojo */
-    .scan-laser {
-        position: absolute;
-        width: 100%;
-        height: 2px;
-        background: #ec4899; /* Rosa neón */
-        box-shadow: 0 0 10px #ec4899, 0 0 20px #ec4899;
-        top: 0;
-        animation: scanning 2.5s infinite ease-in-out;
-        opacity: 0.8;
-    }
-
-    @keyframes scanning {
-        0% {
-            top: 5%;
-            opacity: 0;
-        }
-
-        50% {
-            opacity: 1;
-        }
-
-        100% {
-            top: 95%;
-            opacity: 0;
-        }
-    }
-
-    /* Animación de entrada suave */
-    .fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    /* Estilizar el botón de permiso si aparece */
+    #reader__dashboard_section_csr button {
+        background-color: var(--primary-color, #0d6efd);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 50px;
+        margin-top: 10px;
     }
 </style>
 {% endblock %}
 
 {% block scripts %}
-<!-- 1. Librería del Escáner -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/instascan/1.0.0/instascan.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-<!-- 2. Lógica del Escáner -->
-<script type="text/javascript">
+<script>
     document.addEventListener('DOMContentLoaded', function () {
+        const statusMsg = document.getElementById('status-message');
 
-        const videoElement = document.getElementById('preview');
-        const resultDiv = document.getElementById('result');
-        const statusMsg = document.getElementById('status-msg');
-
-        // Validación básica
-        if (!videoElement) return;
-
-        // Recuperar la URL del data-attribute
-        const urlTemplate = videoElement.dataset.redirectUrl;
-
-        // Verificar si la librería cargó
-        if (typeof Instascan === 'undefined') {
-            if (resultDiv) resultDiv.innerHTML = `<div class="alert alert-danger rounded-pill py-2 small"><i class="bi bi-exclamation-triangle me-2"></i>Error: Librería no cargada.</div>`;
+        // 2. Verificación de seguridad: ¿Cargó la librería?
+        if (typeof Html5QrcodeScanner === 'undefined') {
+            statusMsg.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Error: No se pudo cargar la librería de la cámara. Verifica tu conexión a internet o desactiva el bloqueador de anuncios.</span>';
             return;
         }
 
-        // Configuración del escáner
-        let scanner = new Instascan.Scanner({
-            video: videoElement,
-            mirror: false // Importante: false para que no se vea al revés con cámara trasera
-        });
+        function onScanSuccess(decodedText, decodedResult) {
+            // DETECTAR SI ES UNA URL O UN TEXTO PLANO
+            console.log(`Código escaneado: ${decodedText}`);
 
-        // Evento: Cuando detecta un QR
-        scanner.addListener('scan', function (content) {
-            // Mostrar mensaje de éxito
-            if (resultDiv) {
-                resultDiv.innerHTML = `<div class="alert alert-success rounded-pill py-2 fw-bold shadow-sm fade show"><i class="bi bi-check-circle-fill me-2"></i>¡Leído! Redirigiendo...</div>`;
-            }
+            // Pausar para evitar lecturas múltiples
+            html5QrcodeScanner.clear();
 
-            // Detener para ahorrar recursos
-            scanner.stop();
+            statusMsg.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ¡Código detectado! Redirigiendo...</span>';
 
-            // Construir la URL final y redirigir
-            const finalUrl = urlTemplate.replace('SKU_JS', content);
-
-            // Pequeño retraso para que el usuario vea el mensaje de éxito
-            setTimeout(() => {
-                window.location.href = finalUrl;
-            }, 500);
-        });
-
-        // Iniciar cámara
-        Instascan.Camera.getCameras().then(function (cameras) {
-            if (cameras.length > 0) {
-                // Lógica inteligente de selección de cámara:
-                // Si hay más de 1, usa la segunda (normalmente la trasera en celulares)
-                let selectedCamera = cameras.length > 1 ? cameras[1] : cameras[0];
-
-                scanner.start(selectedCamera).then(() => {
-                    // Actualizar estado visual
-                    statusMsg.innerHTML = '<i class="bi bi-broadcast me-2"></i> Buscando código...';
-                    statusMsg.classList.remove('bg-black');
-                    statusMsg.classList.add('bg-success');
-                }).catch(err => {
-                    console.error("Error al iniciar stream:", err);
-                    statusMsg.innerHTML = 'Error de stream';
-                });
+            // Lógica de redirección
+            if (decodedText.startsWith('http')) {
+                // Si es una URL completa (QR de Estante o Acción), ir a ella
+                window.location.href = decodedText;
             } else {
-                statusMsg.innerHTML = '<i class="bi bi-x-circle me-2"></i> Sin cámara';
-                statusMsg.classList.add('bg-danger');
-                if (resultDiv) resultDiv.innerHTML = `<div class="alert alert-warning small">No se detectaron cámaras conectadas.</div>`;
+                // Si es solo el SKU (texto plano), redirigir al buscador o detalle
+                // Ajusta esta URL según tu ruta de búsqueda
+                const baseUrl = "{% url 'app:lista_productos' %}";
+                window.location.href = `${baseUrl}?q=${decodedText}`;
             }
-        }).catch(function (e) {
-            console.error(e);
-            statusMsg.innerHTML = '<i class="bi bi-lock me-2"></i> Permiso denegado';
-            if (resultDiv) resultDiv.innerHTML = `<div class="alert alert-danger small">Debes permitir el acceso a la cámara.</div>`;
-        });
+        }
 
+        function onScanFailure(error) {
+            // No hacer nada aquí para no saturar la consola, es normal que falle mientras busca
+            // console.warn(`Code scan error = ${error}`);
+        }
+
+        // 3. Configuración del Escáner
+        let config = {
+            fps: 10, // Cuadros por segundo
+            qrbox: { width: 250, height: 250 }, // Tamaño del cuadro de enfoque
+            aspectRatio: 1.0
+        };
+
+        // 4. Iniciar el escáner
+        try {
+            var html5QrcodeScanner = new Html5QrcodeScanner("reader", config, /* verbose= */ false);
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            statusMsg.innerText = "Cámara activa. Buscando QR...";
+        } catch (e) {
+            console.error(e);
+            statusMsg.innerHTML = '<span class="text-danger">Error al iniciar cámara: ' + e.message + '</span>';
+        }
     });
 </script>
 {% endblock %}
