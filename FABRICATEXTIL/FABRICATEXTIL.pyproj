@@ -68,7 +68,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app\static\app\css\style.css" />
-    <Content Include="app\static\app\js\html5-qrcode.min.js" />
     <Content Include="app\static\app\manifest.json" />
     <Content Include="app\templates\app\lista_productos.html" />
     <Content Include="app\templates\app\detalle_producto.html" />

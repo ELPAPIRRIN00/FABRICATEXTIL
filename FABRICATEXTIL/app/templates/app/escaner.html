@@ -1,60 +1,3 @@
-{% extends "app/base.html" %}
-{% load static %}
-
-{% block title %}Escanear Producto{% endblock %}
-
-{% block content %}
-<div class="container fade-in-up mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-
-            <div class="card-modern bg-white shadow-lg border-0 overflow-hidden">
-                <div class="card-header bg-dark text-white text-center py-3">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-qr-code-scan me-2"></i> Escáner Activo</h5>
-                </div>
-
-                <div class="card-body p-0">
-                    <div id="reader" style="width: 100%; min-height: 300px; background: #000;"></div>
-
-                    <div id="status-message" class="text-center p-3 text-muted small">
-                        Esperando permiso de cámara...
-                    </div>
-                </div>
-
-                <div class="card-footer bg-white border-top p-3 text-center">
-                    <a href="{% url 'app:lista_productos' %}" class="btn btn-outline-secondary rounded-pill w-100">
-                        Cancelar / Volver
-                    </a>
-                </div>
-            </div>
-
-            <div class="text-center mt-3 text-muted opacity-75 small">
-                <p>Apunta la cámara al código QR del producto.<br>Asegúrate de tener buena iluminación.</p>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<style>
-    /* Ocultar elementos innecesarios que genera la librería por defecto */
-    #reader__dashboard_section_csr span,
-    #reader__dashboard_section_swaplink {
-        display: none !important;
-    }
-
-    /* Estilizar el botón de permiso si aparece */
-    #reader__dashboard_section_csr button {
-        background-color: var(--primary-color, #0d6efd);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 50px;
-        margin-top: 10px;
-    }
-</style>
-{% endblock %}
-
 {% block scripts %}
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
@@ -62,53 +5,50 @@
     document.addEventListener('DOMContentLoaded', function () {
         const statusMsg = document.getElementById('status-message');
 
-        // 2. Verificación de seguridad: ¿Cargó la librería?
+        // 1. Verificación de seguridad
         if (typeof Html5QrcodeScanner === 'undefined') {
-            statusMsg.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Error: No se pudo cargar la librería de la cámara. Verifica tu conexión a internet o desactiva el bloqueador de anuncios.</span>';
+            statusMsg.innerHTML = '<span class="text-danger fw-bold">Error: Librería no cargada. Revisa tu conexión.</span>';
             return;
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // DETECTAR SI ES UNA URL O UN TEXTO PLANO
             console.log(`Código escaneado: ${decodedText}`);
-
-            // Pausar para evitar lecturas múltiples
             html5QrcodeScanner.clear();
 
-            statusMsg.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> ¡Código detectado! Redirigiendo...</span>';
+            statusMsg.innerHTML = '<span class="text-success fw-bold">¡Código detectado! Procesando...</span>';
 
-            // Lógica de redirección
+            // Lógica de redirección inteligente
             if (decodedText.startsWith('http')) {
-                // Si es una URL completa (QR de Estante o Acción), ir a ella
                 window.location.href = decodedText;
             } else {
-                // Si es solo el SKU (texto plano), redirigir al buscador o detalle
-                // Ajusta esta URL según tu ruta de búsqueda
+                // Ajusta esta URL a tu buscador
                 const baseUrl = "{% url 'app:lista_productos' %}";
                 window.location.href = `${baseUrl}?q=${decodedText}`;
             }
         }
 
         function onScanFailure(error) {
-            // No hacer nada aquí para no saturar la consola, es normal que falle mientras busca
             // console.warn(`Code scan error = ${error}`);
         }
 
-        // 3. Configuración del Escáner
+        // 2. CONFIGURACIÓN CORREGIDA PARA MOVILES
         let config = {
-            fps: 10, // Cuadros por segundo
-            qrbox: { width: 250, height: 250 }, // Tamaño del cuadro de enfoque
-            aspectRatio: 1.0
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+            // ESTO ES LO NUEVO: Forzamos la cámara trasera
+            videoConstraints: {
+                facingMode: "environment"
+            }
         };
 
-        // 4. Iniciar el escáner
+        // 3. Iniciar
         try {
-            var html5QrcodeScanner = new Html5QrcodeScanner("reader", config, /* verbose= */ false);
+            var html5QrcodeScanner = new Html5QrcodeScanner("reader", config, false);
             html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-            statusMsg.innerText = "Cámara activa. Buscando QR...";
+            statusMsg.innerText = "Cámara activa. Apunta al código.";
         } catch (e) {
-            console.error(e);
-            statusMsg.innerHTML = '<span class="text-danger">Error al iniciar cámara: ' + e.message + '</span>';
+            statusMsg.innerHTML = '<span class="text-danger">Error: ' + e.message + '</span>';
         }
     });
 </script>
