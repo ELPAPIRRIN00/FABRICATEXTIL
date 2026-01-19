@@ -1,170 +1,154 @@
 {% extends "app/base.html" %}
 {% load static %}
 
-{% block title %}Dashboard y Métricas{% endblock %}
+{% block title %}Panel de Control{% endblock %}
 
 {% block content %}
-<div class="fade-in-up container-fluid px-4">
+<div class="fade-in-up container-fluid px-4 py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h2 class="fw-bold text-dark mb-0">Panel de Control</h2>
-            <p class="text-muted small">Resumen visual del estado del inventario.</p>
+            <p class="text-muted small mb-0">Resumen visual e indicadores clave.</p>
         </div>
         <div>
-            <a href="{% url 'app:ver_reportes' %}" class="btn btn-sm btn-outline-secondary rounded-pill me-2">
-                <i class="bi bi-file-text"></i> Ver Historial
+            <a href="{% url 'app:ver_reportes' %}" class="btn btn-sm btn-outline-dark rounded-pill me-2 px-3">
+                <i class="bi bi-list-ul me-1"></i> Ver Tabla Detallada
             </a>
-            <button class="btn btn-sm btn-primary rounded-pill shadow-sm" onclick="location.reload()">
+            <button class="btn btn-sm btn-primary rounded-pill shadow-sm px-3" onclick="location.reload()">
                 <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
             </button>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-5">
 
         <div class="col-md-4">
-            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100 border-0 shadow-sm">
+            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100 shadow-sm border-0">
                 <div class="position-absolute top-0 end-0 p-3 opacity-10">
-                    <i class="bi bi-layers-fill" style="font-size: 5rem; color: var(--primary-color);"></i>
+                    <i class="bi bi-layers-fill" style="font-size: 5rem; color: var(--primary-color, #0d6efd);"></i>
                 </div>
-                <div class="card-icon-box text-white bg-primary bg-gradient shadow-sm me-3 rounded-3 p-3">
-                    <i class="bi bi-box-seam fs-4"></i>
+                <div class="card-icon-box text-white bg-primary bg-gradient shadow-sm me-3">
+                    <i class="bi bi-box-seam" style="font-size: 1.8rem;"></i>
                 </div>
                 <div>
-                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Piezas Totales</h6>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Stock Total</h6>
                     <h2 class="display-6 fw-bold text-dark mb-0">{{ total_piezas }}</h2>
+                    <small class="text-success fw-bold small"><i class="bi bi-check-lg"></i> Piezas Físicas</small>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100 border-0 shadow-sm">
+            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100 shadow-sm border-0">
                 <div class="position-absolute top-0 end-0 p-3 opacity-10">
                     <i class="bi bi-tags-fill" style="font-size: 5rem; color: #198754;"></i>
                 </div>
-                <div class="card-icon-box text-white bg-success bg-gradient shadow-sm me-3 rounded-3 p-3">
-                    <i class="bi bi-palette fs-4"></i>
+                <div class="card-icon-box text-white bg-success bg-gradient shadow-sm me-3">
+                    <i class="bi bi-palette" style="font-size: 1.8rem;"></i>
                 </div>
                 <div>
-                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Modelos / SKUs</h6>
+                    <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Variedad</h6>
                     <h2 class="display-6 fw-bold text-dark mb-0">{{ total_productos }}</h2>
+                    <small class="text-secondary fw-bold small">Modelos (SKUs)</small>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100 border-0 shadow-sm">
+            <div class="card-modern p-4 d-flex align-items-center bg-white position-relative overflow-hidden h-100 shadow-sm border-0">
                 <div class="position-absolute top-0 end-0 p-3 opacity-10">
                     <i class="bi bi-exclamation-triangle-fill" style="font-size: 5rem; color: #dc3545;"></i>
                 </div>
-                <div class="card-icon-box text-white bg-danger bg-gradient shadow-sm me-3 rounded-3 p-3">
-                    <i class="bi bi-lightning-charge fs-4"></i>
+                <div class="card-icon-box text-white bg-danger bg-gradient shadow-sm me-3">
+                    <i class="bi bi-lightning-charge" style="font-size: 1.8rem;"></i>
                 </div>
                 <div>
                     <h6 class="text-muted text-uppercase mb-1 fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Stock Crítico (<5)</h6>
                     <h2 class="display-6 fw-bold text-danger mb-0">{{ productos_bajo_stock }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100 card-modern">
-                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
-                    <h5 class="fw-bold text-dark"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Top 10: Mayor Stock</h5>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    <canvas id="barChart" style="max-height: 300px;"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100 card-modern">
-                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
-                    <h5 class="fw-bold text-dark"><i class="bi bi-pie-chart-fill text-info me-2"></i>Flujo Histórico</h5>
-                </div>
-                <div class="card-body px-4 pb-4 d-flex flex-column justify-content-center">
-                    <div style="position: relative; height: 250px;">
-                        <canvas id="pieChart"></canvas>
-                    </div>
-                    <p class="text-center text-muted small mt-3 mb-0">Comparativa total de movimientos</p>
+                    <small class="text-danger fw-bold small">Requieren Atención</small>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row g-4 mb-5">
-
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100 card-modern">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0 text-danger"><i class="bi bi-cone-striped me-2"></i>Reponer Inventario</h5>
-                    <span class="badge bg-danger-subtle text-danger rounded-pill">Urgente</span>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4 text-muted small text-uppercase">Producto</th>
-                                    <th class="text-center text-muted small text-uppercase">Stock Actual</th>
-                                    <th class="text-end pe-4 text-muted small text-uppercase">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for p in alerta_stock %}
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">{{ p.nombre_tela }}</div>
-                                        <div class="small text-muted">{{ p.sku }}</div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-danger rounded-pill px-3">{{ p.pz }} pz</span>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <a href="{% url 'app:kiosco_movimiento' p.sku %}" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-plus-lg"></i> Surtir
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center py-5 text-muted">
-                                        <i class="bi bi-check-circle-fill text-success fs-3 mb-2 d-block"></i>
-                                        ¡Excelente! No hay productos en nivel crítico.
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="col-lg-8">
+            <div class="card-modern bg-white h-100 p-4 shadow-sm border-0">
+                <h5 class="fw-bold text-dark mb-4">
+                    <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Top 10: Mayor Stock
+                </h5>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="barChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100 card-modern bg-white">
-                <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
-                    <h5 class="fw-bold text-dark mb-0">
-                        <i class="bi bi-clock-history text-secondary me-2"></i> Actividad Reciente
+        <div class="col-lg-4">
+            <div class="card-modern bg-white h-100 p-4 shadow-sm border-0">
+                <h5 class="fw-bold text-dark mb-4">
+                    <i class="bi bi-pie-chart-fill text-info me-2"></i>Flujo Histórico
+                </h5>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="pieChart"></canvas>
+                </div>
+                <p class="text-center text-muted small mt-3 mb-0">Comparativa Entradas vs Salidas</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card-modern bg-white p-4 shadow-sm border-0">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-danger mb-0">
+                        <i class="bi bi-cone-striped me-2"></i>Reponer Inventario (Stock Bajo)
                     </h5>
+                    {% if alerta_stock %}
+                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3">Urgente</span>
+                    {% else %}
+                    <span class="badge bg-success-subtle text-success rounded-pill px-3">Todo en orden</span>
+                    {% endif %}
                 </div>
-                <div class="card-body pt-0 px-4">
-                    <div class="text-center py-5">
-                        <img src="https://cdn-icons-png.flaticon.com/512/2921/2921222.png" alt="Reportes" style="width: 80px; opacity: 0.5;" class="mb-3">
-                        <h6 class="text-dark fw-bold">Registro de Movimientos</h6>
-                        <p class="text-muted small px-5">Consulta el detalle de cada entrada y salida, filtra por fechas y audita el inventario.</p>
-                        <a href="{% url 'app:ver_reportes' %}" class="btn btn-outline-primary rounded-pill px-4 mt-2">
-                            Ir al Reporte Completo
-                        </a>
-                    </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="text-muted small text-uppercase ps-3">Producto</th>
+                                <th class="text-center text-muted small text-uppercase">Stock Actual</th>
+                                <th class="text-end text-muted small text-uppercase pe-3">Acción Rápida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in alerta_stock %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-bold text-dark">{{ p.nombre_tela }}</div>
+                                    <small class="text-muted">{{ p.sku }}</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger rounded-pill px-4 py-2 fs-6">{{ p.pz }} pz</span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a href="{% url 'app:kiosco_movimiento' p.sku %}" class="btn btn-sm btn-outline-danger rounded-pill">
+                                        <i class="bi bi-plus-lg"></i> Surtir
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-5">
+                                    <i class="bi bi-check-circle text-success fs-1 d-block mb-3"></i>
+                                    <p class="text-muted fw-bold">¡Excelente! No hay productos en nivel crítico.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -173,107 +157,120 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
 
-        // --- CONFIGURACIÓN GRÁFICO DE BARRAS ---
-        const ctxBar = document.getElementById('barChart').getContext('2d');
-        const nombres = {{ nombres_productos_json|safe }};
-        const stock = {{ stock_productos_json|safe }};
-
-        new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: nombres,
-                datasets: [{
-                    label: 'Piezas',
-                    data: stock,
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)', // Azul moderno
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 1,
-                    borderRadius: 6,
-                    barPercentage: 0.6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+        // --- GRÁFICO DE BARRAS ---
+        const ctxBar = document.getElementById('barChart');
+        if (ctxBar) {
+            new Chart(ctxBar.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {{ nombres_productos_json|safe }},
+                    datasets: [{
+                        label: 'Piezas Disponibles',
+                        data: {{ stock_productos_json|safe }},
+                        backgroundColor: 'rgba(13, 110, 253, 0.7)', // Primary Bootstrap color
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        barPercentage: 0.6
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { borderDash: [2, 4], color: "#f0f0f0" }
-                    },
-                    x: {
-                        grid: { display: false }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // IMPORTANTE para que respete el alto del div
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [2, 4] } },
+                        x: { grid: { display: false } }
                     }
                 }
-            }
-        });
+            });
+        }
 
-        // --- CONFIGURACIÓN GRÁFICO DE PASTEL ---
-        const ctxPie = document.getElementById('pieChart').getContext('2d');
-        const entradas = {{ entradas_json }};
-        const salidas = {{ salidas_json }};
-
-        new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: ['Entradas', 'Salidas'],
-                datasets: [{
-                    data: [entradas, salidas],
-                    backgroundColor: [
-                        'rgba(16, 185, 129, 0.7)', // Verde Esmeralda
-                        'rgba(239, 68, 68, 0.7)'   // Rojo
-                    ],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%', // Hace el agujero del centro más grande
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20,
-                            font: { size: 12 }
-                        }
+        // --- GRÁFICO DE PASTEL ---
+        const ctxPie = document.getElementById('pieChart');
+        if (ctxPie) {
+            new Chart(ctxPie.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Entradas', 'Salidas'],
+                    datasets: [{
+                        data: [{{ entradas_json }}, {{ salidas_json }}],
+                        backgroundColor: [
+                            'rgba(25, 135, 84, 0.7)', // Success Green
+                            'rgba(220, 53, 69, 0.7)'   // Danger Red
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // IMPORTANTE
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom' }
                     }
                 }
-            }
-        });
+            });
+        }
     });
 </script>
 
 <style>
-    /* Estilos personalizados adicionales */
+    /* --- ESTILOS VISUALES RESTAURADOS --- */
+
+    /* Fondo gris claro para la app en general si no lo tiene */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    /* Estilo de Tarjetas */
     .card-modern {
         border-radius: 16px;
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
         .card-modern:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.08) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
         }
 
-    .bg-danger-subtle {
-        background-color: #fef2f2 !important;
-        color: #991b1b !important;
+    /* Caja del icono con gradiente (Restaurado) */
+    .card-icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    /* Animación de entrada */
+    /* Opacidad para el icono grande de fondo */
+    .opacity-10 {
+        opacity: 0.1;
+        pointer-events: none; /* Para que no interfiera con clicks */
+    }
+
+    /* Badges sutiles */
+    .bg-success-subtle {
+        background-color: #d1e7dd !important;
+        color: #0f5132 !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: #f8d7da !important;
+        color: #842029 !important;
+    }
+
+    /* Animación de entrada suave */
     .fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
+        animation: fadeInUp 0.5s ease-out forwards;
     }
 
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(15px);
         }
 
         to {
