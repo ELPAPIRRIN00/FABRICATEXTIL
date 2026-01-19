@@ -5,7 +5,8 @@ import google.generativeai as genai
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
-from django.db.models import Sum
+# IMPORTANTE: Se agregaron Count y F para los gráficos del Dashboard
+from django.db.models import Sum, Count, F
 from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
@@ -14,7 +15,6 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
-# Corrección de importaciones (eliminada la coma extra)
 from .models import Producto, MovimientoInventario
 from .forms import ProductoForm, MovimientoForm, AjustarStockForm
 
@@ -231,6 +231,51 @@ def ajustar_stock(request, sku):
     return render(request, 'app/ajustar_stock.html', contexto)
 
 
+# --- DASHBOARD (Panel de Control) ---
+# Nueva vista agregada
+
+@login_required
+def dashboard(request):
+    # 1. DATOS PARA TARJETAS (KPIs)
+    total_productos = Producto.objects.count()
+    total_piezas = Producto.objects.aggregate(total=Sum('pz'))['total'] or 0
+    # Stock bajo si hay menos de 5 piezas
+    productos_bajo_stock = Producto.objects.filter(pz__lte=5).count()
+
+    # 2. DATOS PARA GRÁFICO DE BARRAS (Top 10 productos con más stock)
+    top_productos = Producto.objects.order_by('-pz')[:10]
+    nombres_productos = [p.nombre_tela for p in top_productos]
+    stock_productos = [p.pz for p in top_productos]
+
+    # 3. DATOS PARA GRÁFICO DE PASTEL (Entradas vs Salidas - Histórico)
+    movimientos_data = MovimientoInventario.objects.values('tipo_movimiento').annotate(total=Count('id'))
+    
+    entradas = 0
+    salidas = 0
+    for mov in movimientos_data:
+        if mov['tipo_movimiento'] == 'ENTRADA':
+            entradas = mov['total']
+        elif mov['tipo_movimiento'] == 'SALIDA':
+            salidas = mov['total']
+
+    # 4. TABLA DE ALERTA (Productos con poco stock)
+    alerta_stock = Producto.objects.filter(pz__lte=5).order_by('pz')[:5]
+
+    contexto = {
+        'titulo': 'Dashboard de Métricas',
+        'total_productos': total_productos,
+        'total_piezas': total_piezas,
+        'productos_bajo_stock': productos_bajo_stock,
+        'alerta_stock': alerta_stock,
+        # JSON para Chart.js
+        'nombres_productos_json': json.dumps(nombres_productos),
+        'stock_productos_json': json.dumps(stock_productos),
+        'entradas_json': entradas,
+        'salidas_json': salidas,
+    }
+    return render(request, 'app/dashboard.html', contexto)
+
+
 # --- Vistas Estáticas y Reportes ---
 
 def index(request):
@@ -249,7 +294,7 @@ def ver_reportes(request):
     # Filtros de fecha
     fecha_inicio_str = request.GET.get('fecha_inicio')
     fecha_fin_str = request.GET.get('fecha_fin')
-     
+      
     movimientos_query = MovimientoInventario.objects.all()
 
     if fecha_inicio_str and fecha_fin_str:
@@ -260,7 +305,7 @@ def ver_reportes(request):
             movimientos_query = movimientos_query.filter(fecha__range=[fecha_inicio, fecha_fin])
         except ValueError:
             pass
-     
+      
     ultimos_movimientos = movimientos_query.order_by('-fecha')[:50]
 
     total_piezas = Producto.objects.aggregate(total=Sum('pz'))['total'] or 0
@@ -322,7 +367,7 @@ def generar_descripcion_api(request):
         except Exception as e:
             print(f"Error Gemini API: {e}")
             return JsonResponse({'error': str(e)}, status=500)
-     
+      
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
 # --- BORRAR ESTO DESPUÉS DE USAR ---

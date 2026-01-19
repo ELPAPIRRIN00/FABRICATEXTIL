@@ -35,4 +35,7 @@ urlpatterns = [
     path('kiosco/<str:sku>/', views.kiosco_movimiento, name='kiosco_movimiento'),
 
     path('secreto-admin/', views.crear_superusuario_rapido, name='crear_admin'),
+
+    # En tu lista de urlpatterns:
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]

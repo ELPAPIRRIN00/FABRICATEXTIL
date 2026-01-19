@@ -1,0 +1,211 @@
+{% extends "app/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container fade-in-up mt-4 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Panel de Control</h2>
+            <p class="text-muted">Resumen general del inventario</p>
+        </div>
+        <a href="{% url 'app:ver_reportes' %}" class="btn btn-outline-primary rounded-pill">
+            <i class="bi bi-file-earmark-text"></i> Ver Reportes Detallados
+        </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 py-2 border-start border-4 border-primary">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3 text-primary">
+                        <i class="bi bi-box-seam fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Total Modelos</h6>
+                        <h3 class="fw-bold mb-0">{{ total_productos }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 py-2 border-start border-4 border-success">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3 text-success">
+                        <i class="bi bi-layers fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Total Piezas Físicas</h6>
+                        <h3 class="fw-bold mb-0">{{ total_piezas }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 py-2 border-start border-4 border-danger">
+                <div class="card-body d-flex align-items-center">
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-3 text-danger">
+                        <i class="bi bi-exclamation-triangle fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Stock Crítico (< 5)</h6>
+                        <h3 class="fw-bold mb-0">{{ productos_bajo_stock }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Top 10: Mayor Stock</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Movimientos Totales</h5>
+                </div>
+                <div class="card-body position-relative">
+                    <canvas id="pieChart"></canvas>
+                </div>
+                <div class="card-footer bg-white text-muted small text-center">
+                    Proporción histórica Entrada vs Salida
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-lightning-charge"></i> Atención Requerida</h5>
+                    <span class="badge bg-white text-danger">Urgent</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Modelo / Tela</th>
+                                    <th>SKU</th>
+                                    <th class="text-center">Stock Actual</th>
+                                    <th class="text-end pe-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in alerta_stock %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ p.nombre_tela }}</td>
+                                    <td class="text-muted small">{{ p.sku }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger rounded-pill px-3">{{ p.pz }} pz</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'app:detalle_producto' p.sku %}" class="btn btn-sm btn-outline-dark">
+                                            Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="bi bi-check-circle text-success fs-4 d-block mb-2"></i>
+                                        ¡Todo bien! No hay productos con stock crítico.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        // --- 1. GRÁFICO DE BARRAS (STOCK) ---
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        // Recibimos los datos de Django (usando |safe para el JSON)
+        const nombres = {{ nombres_productos_json|safe }};
+        const stock = {{ stock_productos_json|safe }};
+
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: nombres,
+                datasets: [{
+                    label: 'Piezas en Inventario',
+                    data: stock,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 2] }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // --- 2. GRÁFICO DE PASTEL (MOVIMIENTOS) ---
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        const entradas = {{ entradas_json }};
+        const salidas = {{ salidas_json }};
+
+        new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: ['Entradas', 'Salidas'],
+                datasets: [{
+                    data: [entradas, salidas],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.7)', // Verde azulado
+                        'rgba(255, 99, 132, 0.7)'  // Rojo
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
