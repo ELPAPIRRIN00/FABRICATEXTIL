@@ -54,7 +54,7 @@
 <script type="module">
     import QrScanner from 'https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js';
 
-    // Configuración del Worker (necesario para velocidad)
+    // Configuración del Worker para rendimiento
     QrScanner.WORKER_PATH = 'https://unpkg.com/qr-scanner@1.4.2/qr-scanner-worker.min.js';
 
     const videoElem = document.getElementById('scan-video');
@@ -66,42 +66,55 @@
 
     // Función que se ejecuta al detectar un código
     const setResult = (result) => {
-        console.log('Resultado:', result);
+        console.log('Resultado Crudo:', result);
         qrScanner.stop();
 
         resultElem.className = "text-success fw-bold mb-3";
         resultElem.innerHTML = `<i class="bi bi-check-circle-fill"></i> ¡Producto encontrado!`;
         if (navigator.vibrate) navigator.vibrate(200);
 
-        // Procesar el texto
+        // Obtenemos el texto del QR
         let codigoLeido = result.data || result;
 
-        // LIMPIEZA INTELIGENTE:
-        // Si el QR tiene una URL completa (ej: https://web.com/producto/12345),
-        // extraemos solo el último numero (12345).
+        // --- LÓGICA DE LIMPIEZA MEJORADA ---
         if (codigoLeido.includes('http')) {
-            // Quitamos la barra final si existe
+            // 1. Quitar barra final si existe
             if (codigoLeido.endsWith('/')) codigoLeido = codigoLeido.slice(0, -1);
-            // Tomamos lo que está después de la última barra /
-            codigoLeido = codigoLeido.split('/').pop();
+
+            // 2. Separar la URL por las barras '/'
+            const partes = codigoLeido.split('/');
+
+            // 3. Revisar la última parte
+            const ultimaParte = partes[partes.length - 1];
+
+            // Lista de palabras que NO son el SKU
+            const palabrasBasura = ['accion', 'accionar', 'editar', 'kiosco', 'delete', 'detail'];
+
+            if (palabrasBasura.includes(ultimaParte)) {
+                // Si termina en "accionar", tomamos el PENÚLTIMO elemento (que debería ser el SKU)
+                codigoLeido = partes[partes.length - 2];
+            } else {
+                // Si no termina en basura, tomamos el último elemento normalmente
+                codigoLeido = ultimaParte;
+            }
         }
 
+        console.log("SKU Limpio:", codigoLeido);
+
         setTimeout(() => {
-            // REDIRECCIÓN A LA NUEVA VISTA KIOSCO
-            // Asegúrate que 'kiosco' coincida con lo que pusiste en urls.py
+            // REDIRECCIÓN A LA VISTA KIOSCO CON EL SKU LIMPIO
             window.location.href = `/inventario/kiosco/${codigoLeido}/`;
         }, 300);
     };
 
-    // Iniciar escáner
+    // Iniciar escáner al cargar la página
     document.addEventListener('DOMContentLoaded', async () => {
         try {
             qrScanner = new QrScanner(
                 videoElem,
                 result => setResult(result),
                 {
-                    // Preferir cámara trasera ('environment')
-                    preferredCamera: 'environment',
+                    preferredCamera: 'environment', // Preferir cámara trasera
                     highlightScanRegion: true,
                     highlightCodeOutline: true,
                 }
@@ -109,10 +122,10 @@
 
             await qrScanner.start();
 
-            // Si arrancó bien, ocultamos el spinner
+            // Ocultar spinner de carga
             loadingMsg.style.display = 'none';
 
-            // Verificar si hay más cámaras para mostrar botón de cambio
+            // Mostrar botón de cambiar cámara si hay más de una
             const cameras = await QrScanner.listCameras(true);
             if (cameras.length > 1) {
                 switchBtn.style.display = 'inline-block';
@@ -121,23 +134,19 @@
         } catch (e) {
             console.error(e);
             loadingMsg.innerHTML = `<span class="text-danger">Error: ${e}</span>`;
-            // Si falla, a veces es porque está en 'user' en vez de 'environment', intentamos auto
         }
     });
 
-    // Lógica del botón cambiar cámara
+    // Evento del botón cambiar cámara
     if (switchBtn) {
         switchBtn.addEventListener('click', () => {
-            // Simplemente cambiamos a la siguiente cámara disponible
             if (qrScanner) {
-                qrScanner.setCamera('next').then(() => {
-                    // Cámara cambiada
-                });
+                qrScanner.setCamera('next');
             }
         });
     }
 
-    // Limpieza al salir de la página (Importante para SPA o caché)
+    // Limpieza de recursos al salir
     window.addEventListener('beforeunload', () => {
         if (qrScanner) qrScanner.destroy();
     });
