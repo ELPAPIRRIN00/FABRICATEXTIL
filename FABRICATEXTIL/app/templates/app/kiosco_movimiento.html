@@ -9,28 +9,28 @@
 
             <div class="card shadow-lg border-0 text-center">
                 <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0 fw-bold">{{ producto.nombre }}</h4>
+                    <h4 class="mb-0 fw-bold">{{ producto.nombre_tela }}</h4>
                     <small>SKU: {{ producto.sku }}</small>
                 </div>
 
                 <div class="card-body p-4">
                     <h6 class="text-muted text-uppercase mb-2">Stock Actual</h6>
-                    <h1 class="display-1 fw-bold text-dark mb-4">{{ producto.stock }}</h1>
+                    <h1 class="display-1 fw-bold text-dark mb-4">{{ producto.pz }}</h1>
 
                     <hr>
 
                     <p class="mb-3 text-muted">¿Qué deseas hacer?</p>
 
-                    <form method="POST" class="d-grid gap-3">
+                    <form method="POST" class="d-grid gap-3" id="kiosco-form">
                         {% csrf_token %}
                         <input type="hidden" name="cantidad" value="1">
 
-                        <button type="submit" name="tipo" value="entrada" class="btn btn-success btn-lg py-3 rounded-pill shadow">
+                        <button type="submit" name="tipo" value="entrada" class="btn btn-success btn-lg py-3 rounded-pill shadow action-btn">
                             <i class="bi bi-plus-circle-fill display-6 align-middle me-2"></i>
                             <span class="fs-4 align-middle">ENTRADA (+1)</span>
                         </button>
 
-                        <button type="submit" name="tipo" value="salida" class="btn btn-danger btn-lg py-3 rounded-pill shadow">
+                        <button type="submit" name="tipo" value="salida" class="btn btn-danger btn-lg py-3 rounded-pill shadow action-btn">
                             <i class="bi bi-dash-circle-fill display-6 align-middle me-2"></i>
                             <span class="fs-4 align-middle">SALIDA (-1)</span>
                         </button>
@@ -42,12 +42,14 @@
                         <i class="bi bi-qr-code"></i> Escanear Otro Producto
                     </a>
                 </div>
+            </div>
 
             {% if messages %}
             <div class="mt-3">
                 {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} text-center shadow-sm rounded-pill" role="alert">
-                    {{ message }}
+                <div class="alert alert-{{ message.tags }} text-center shadow-sm rounded-pill fade show" role="alert">
+                    <i class="bi bi-info-circle-fill"></i> {{ message }}
+                    <p class="mb-0 small mt-1">Regresando al escáner...</p>
                 </div>
                 {% endfor %}
             </div>
@@ -56,4 +58,50 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // 1. LÓGICA DE AUTO-REDIRECCIÓN
+        // Si hay mensajes (éxito o error), esperamos un poco y volvemos a la cámara
+        {% if messages %}
+        setTimeout(function () {
+            window.location.href = "{% url 'app:escaner_view' %}";
+        }, 1500); // 1.5 segundos de espera
+        {% endif %}
+
+        // 2. BLOQUEO DE BOTONES (ANTI-DOBLE CLIC)
+        const form = document.getElementById('kiosco-form');
+        const buttons = document.querySelectorAll('.action-btn');
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                // Prevenimos el submit por defecto momentáneamente para manipular el DOM
+                e.preventDefault();
+
+                // 1. Bloquear TODOS los botones para que no den clic en el otro
+                buttons.forEach(b => b.disabled = true);
+
+                // 2. Cambiar aspecto del botón presionado
+                const originalContent = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+                this.classList.remove('btn-success', 'btn-danger');
+                this.classList.add('btn-secondary');
+
+                // 3. Como el botón está disabled, no enviará su valor (entrada/salida).
+                // Inyectamos un input oculto con el valor del botón presionado.
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'tipo'; // El nombre que espera la vista
+                hiddenInput.value = this.value; // 'entrada' o 'salida'
+                form.appendChild(hiddenInput);
+
+                // 4. Enviamos el formulario manualmente
+                form.submit();
+            });
+        });
+    });
+</script>
 {% endblock %}
