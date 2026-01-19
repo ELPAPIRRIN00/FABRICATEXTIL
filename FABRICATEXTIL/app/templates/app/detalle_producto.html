@@ -96,25 +96,47 @@
 
                 <h6 class="text-uppercase text-muted fw-bold small mb-3 ls-1">Accesos Digitales</h6>
                 <div class="row g-3">
+
                     <div class="col-md-6">
-                        <div class="border rounded-4 p-3 d-flex align-items-center gap-3 bg-white h-100 position-relative overflow-hidden group-hover-zoom">
-                            <div class="qr-canvas-wrapper">
-                                <div id="qr-info" class="qr-canvas" data-url="{{ url_qr_info }}"></div>
+                        <div class="border rounded-4 p-3 bg-white h-100 position-relative overflow-hidden">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="qr-canvas-wrapper">
+                                    <div id="qr-info" class="qr-canvas" data-url="{{ url_qr_info }}"></div>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">QR Estante</h6>
+                                    <p class="text-muted small mb-0 lh-sm">Para consulta.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-1">QR Estante</h6>
-                                <p class="text-muted small mb-0 lh-sm">Ficha técnica informativa.</p>
+                            <div class="d-grid gap-2 d-md-flex">
+                                <button onclick="imprimirEtiquetaQR('qr-info', 'ESTANTE', '{{ producto.nombre_tela }}', '{{ producto.sku }}')" class="btn btn-sm btn-outline-dark flex-grow-1">
+                                    <i class="bi bi-printer-fill"></i> Imprimir
+                                </button>
+                                <button onclick="descargarImagenQR('qr-info', 'QR_Estante_{{ producto.sku }}')" class="btn btn-sm btn-outline-secondary flex-grow-1">
+                                    <i class="bi bi-download"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-md-6">
-                        <div class="border border-primary border-opacity-50 rounded-4 p-3 d-flex align-items-center gap-3 bg-primary-subtle h-100 position-relative overflow-hidden group-hover-zoom">
-                            <div class="qr-canvas-wrapper bg-white p-1 rounded">
-                                <div id="qr-accion" class="qr-canvas" data-url="{{ url_qr_accion }}"></div>
+                        <div class="border border-primary border-opacity-50 rounded-4 p-3 bg-primary-subtle h-100 position-relative overflow-hidden">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="qr-canvas-wrapper bg-white p-1 rounded">
+                                    <div id="qr-accion" class="qr-canvas" data-url="{{ url_qr_accion }}"></div>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-primary mb-1">QR Acción</h6>
+                                    <p class="text-primary opacity-75 small mb-0 lh-sm">Para escáner.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h6 class="fw-bold text-primary mb-1">QR Acción</h6>
-                                <p class="text-primary opacity-75 small mb-0 lh-sm">Escaneo para E/S rápida.</p>
+                            <div class="d-grid gap-2 d-md-flex">
+                                <button onclick="imprimirEtiquetaQR('qr-accion', 'ACCIÓN', '{{ producto.nombre_tela }}', '{{ producto.sku }}')" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-printer-fill"></i> Imprimir
+                                </button>
+                                <button onclick="descargarImagenQR('qr-accion', 'QR_Accion_{{ producto.sku }}')" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-download"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -124,16 +146,12 @@
         </div>
 
         <div class="col-lg-4">
-
             <div class="card-modern bg-white p-4 shadow-lg border-0 mb-4 text-center position-relative overflow-hidden">
                 <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-primary opacity-10"></div>
-
                 <h6 class="text-uppercase text-muted mb-2 fw-bold ls-1 position-relative">Stock Actual</h6>
                 <div class="display-3 fw-bold text-primary mb-0 position-relative lh-1">{{ producto.pz }}</div>
                 <small class="text-muted position-relative">Piezas Totales</small>
-
                 <hr class="my-4 opacity-10">
-
                 <div class="d-grid gap-2 position-relative">
                     <a href="{% url 'app:registrar_entrada' producto_sku=producto.sku %}" class="btn btn-success fw-bold py-2 shadow-sm border-0">
                         <i class="bi bi-plus-lg me-2"></i> Entrada Manual
@@ -148,7 +166,6 @@
                 <h6 class="text-uppercase text-muted mb-4 fw-bold ls-1 border-bottom pb-2">
                     <i class="bi bi-clock-history me-2"></i> Actividad Reciente
                 </h6>
-
                 <div class="timeline position-relative">
                     {% for mov in producto.movimientoinventario_set.all|slice:":10" %}
                     <div class="timeline-item pb-4 position-relative ps-4 border-start border-2 border-light">
@@ -156,7 +173,6 @@
                             {% if mov.tipo_movimiento == 'ENTRADA' %}bg-success{% else %}bg-danger{% endif %}"
                              style="width: 12px; height: 12px; left: -1px; margin-top: 5px;">
                         </div>
-
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <span class="badge {% if mov.tipo_movimiento == 'ENTRADA' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} mb-1 border-0 fw-bold" style="font-size: 0.65rem;">
@@ -184,10 +200,8 @@
                     {% endfor %}
                 </div>
             </div>
-
         </div>
     </div>
-
 </div>
 
 <style>
@@ -197,12 +211,10 @@
         padding-bottom: 0 !important;
     }
 
-    /* Espaciado de letras */
     .ls-1 {
         letter-spacing: 1px;
     }
 
-    /* Fondo sutil */
     .bg-primary-subtle {
         background-color: #e0e7ff !important;
         color: #3730a3 !important;
@@ -218,7 +230,6 @@
         color: #991b1b !important;
     }
 
-    /* Gradiente para stock */
     .bg-gradient-primary {
         background: linear-gradient(135deg, var(--primary-color), #818cf8);
     }
@@ -234,7 +245,7 @@
             height: auto;
         }
 
-    /* Animación de entrada */
+    /* Animación */
     .fade-in-up {
         animation: fadeInUp 0.6s ease-out forwards;
     }
@@ -257,18 +268,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // 1. GENERAR LOS QR AL CARGAR
         function generarQR(elementoId) {
             const el = document.getElementById(elementoId);
             if (el) {
                 const url = el.dataset.url;
                 if (url) {
-                    // Limpiar contenido previo si existe
                     el.innerHTML = "";
                     new QRCode(el, {
                         text: url,
-                        width: 100,
-                        height: 100,
-                        correctLevel: QRCode.CorrectLevel.M
+                        width: 200, // Generamos más grande para mejor calidad al imprimir
+                        height: 200,
+                        correctLevel: QRCode.CorrectLevel.H // Alta corrección de errores
                     });
                 }
             }
@@ -276,5 +287,65 @@
         generarQR('qr-info');
         generarQR('qr-accion');
     });
+
+    // 2. FUNCIÓN PARA DESCARGAR IMAGEN
+    function descargarImagenQR(elementId, nombreArchivo) {
+        const contenedor = document.getElementById(elementId);
+        const img = contenedor.querySelector('img');
+
+        if (img) {
+            const enlace = document.createElement('a');
+            enlace.href = img.src;
+            enlace.download = nombreArchivo + '.png';
+            document.body.appendChild(enlace);
+            enlace.click();
+            document.body.removeChild(enlace);
+        } else {
+            alert('El código QR aún se está generando. Intenta de nuevo en un segundo.');
+        }
+    }
+
+    // 3. FUNCIÓN PARA IMPRIMIR ETIQUETA
+    function imprimirEtiquetaQR(elementId, tipo, nombre, sku) {
+        const contenedor = document.getElementById(elementId);
+        const img = contenedor.querySelector('img');
+
+        if (!img) return;
+
+        // Abrir ventana nueva para impresión limpia
+        const ventana = window.open('', 'Imprimir', 'height=600,width=600');
+
+        ventana.document.write('<html><head><title>Imprimir Etiqueta</title>');
+        ventana.document.write('<style>');
+        ventana.document.write(`
+            body { font-family: sans-serif; text-align: center; padding: 20px; }
+            .etiqueta { border: 2px solid #000; padding: 20px; display: inline-block; border-radius: 10px; max-width: 300px; }
+            h1 { font-size: 18px; margin: 0 0 5px 0; text-transform: uppercase; }
+            h2 { font-size: 24px; margin: 5px 0; color: #000; font-weight: bold; }
+            .qr-img { width: 150px; height: 150px; margin: 10px auto; display: block; }
+            .sku { font-family: monospace; font-size: 16px; background: #eee; padding: 5px; display: inline-block; margin-top: 5px; }
+            .footer { font-size: 10px; margin-top: 10px; color: #555; }
+        `);
+        ventana.document.write('</style></head><body>');
+
+        // Contenido de la etiqueta
+        ventana.document.write('<div class="etiqueta">');
+        ventana.document.write('<h1>' + tipo + '</h1>');
+        ventana.document.write('<h2>' + nombre + '</h2>');
+        ventana.document.write('<img src="' + img.src + '" class="qr-img"/>');
+        ventana.document.write('<div class="sku">SKU: ' + sku + '</div>');
+        ventana.document.write('<div class="footer">Sistema Inventario Textil</div>');
+        ventana.document.write('</div>');
+
+        ventana.document.write('</body></html>');
+        ventana.document.close();
+        ventana.focus();
+
+        // Esperar un momento para cargar la imagen y lanzar print
+        setTimeout(function () {
+            ventana.print();
+            ventana.close();
+        }, 500);
+    }
 </script>
 {% endblock %}
