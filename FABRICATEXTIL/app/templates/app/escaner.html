@@ -67,27 +67,30 @@
     // Función que se ejecuta al detectar un código
     const setResult = (result) => {
         console.log('Resultado:', result);
-
-        // Detener escáner para evitar dobles lecturas
         qrScanner.stop();
 
-        // Efecto visual y feedback
         resultElem.className = "text-success fw-bold mb-3";
-        resultElem.innerHTML = `<i class="bi bi-check-circle-fill"></i> ¡Leído! Procesando...`;
-
+        resultElem.innerHTML = `<i class="bi bi-check-circle-fill"></i> ¡Producto encontrado!`;
         if (navigator.vibrate) navigator.vibrate(200);
 
-        // Procesar el texto (data) del resultado
-        const decodedText = result.data || result; // A veces viene en objeto, a veces string
+        // Procesar el texto
+        let codigoLeido = result.data || result;
+
+        // LIMPIEZA INTELIGENTE:
+        // Si el QR tiene una URL completa (ej: https://web.com/producto/12345),
+        // extraemos solo el último numero (12345).
+        if (codigoLeido.includes('http')) {
+            // Quitamos la barra final si existe
+            if (codigoLeido.endsWith('/')) codigoLeido = codigoLeido.slice(0, -1);
+            // Tomamos lo que está después de la última barra /
+            codigoLeido = codigoLeido.split('/').pop();
+        }
 
         setTimeout(() => {
-            if (decodedText.startsWith('http')) {
-                window.location.href = decodedText;
-            } else {
-                const baseUrl = "{% url 'app:lista_productos' %}";
-                window.location.href = `${baseUrl}?q=${decodedText}`;
-            }
-        }, 300); // Pequeña pausa para que el usuario vea el check verde
+            // REDIRECCIÓN A LA NUEVA VISTA KIOSCO
+            // Asegúrate que 'kiosco' coincida con lo que pusiste en urls.py
+            window.location.href = `/inventario/kiosco/${codigoLeido}/`;
+        }, 300);
     };
 
     // Iniciar escáner

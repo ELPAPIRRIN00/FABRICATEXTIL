@@ -2,23 +2,23 @@
 import json
 import os
 import google.generativeai as genai
-from datetime import datetime, timedelta  # <--- AGREGADO PARA QUE NO FALLEN LOS REPORTES
+from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse # <--- AGREGADO HttpResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.db.models import Sum
 from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User # <--- AGREGADO PARA CREAR EL ADMIN
+from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
+# Corrección de importaciones (eliminada la coma extra)
 from .models import Producto, MovimientoInventario
 from .forms import ProductoForm, MovimientoForm, AjustarStockForm
 
 # --- CONFIGURACIÓN DE IA (Gemini) ---
-# Intenta obtener la API Key de las variables de entorno o usa una por defecto (CUIDADO en producción)
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'TU_API_KEY_AQUI') 
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -43,8 +43,9 @@ def detalle_producto(request, sku):
     url_info = request.build_absolute_uri(
         reverse('app:detalle_producto', args=[producto.sku])
     )
+    # El QR de acción ahora apunta al Kiosco para escaneo rápido
     url_accion = request.build_absolute_uri(
-        reverse('app:accion_producto', args=[producto.sku])
+        reverse('app:kiosco_movimiento', args=[producto.sku])
     )
 
     contexto = {
@@ -145,40 +146,62 @@ def registrar_salida(request, producto_sku):
     return render(request, 'app/registrar_movimiento.html', contexto)
 
 
-# --- VISTA QR ACCIÓN (CON PANTALLA DE DECISIÓN) ---
+# --- NUEVA VISTA: KIOSCO (Escaneo Rápido) ---
+# Esta vista NO requiere @login_required para agilidad en almacén
 
-def accion_producto(request, sku):
+def kiosco_movimiento(request, sku):
     producto = get_object_or_404(Producto, sku=sku)
 
     if request.method == 'POST':
-        accion = request.POST.get('accion')
-        cantidad = 1
-        hora = timezone.now().strftime("%H:%M:%S")
+        tipo = request.POST.get('tipo') # 'entrada' o 'salida'
+        try:
+            cantidad = int(request.POST.get('cantidad', 1))
+        except ValueError:
+            cantidad = 1
+        
+        # Intentamos obtener usuario si hay sesión iniciada, si no, es anónimo (Sistema)
         usuario_actual = request.user if request.user.is_authenticated else None
 
-        if accion == 'entrada':
+        if tipo == 'entrada':
             producto.pz += cantidad
             producto.save()
+            
             MovimientoInventario.objects.create(
-                producto=producto, tipo_movimiento='ENTRADA', cantidad=cantidad, notas="QR Pieza única", usuario=usuario_actual
+                producto=producto, 
+                tipo_movimiento='ENTRADA', 
+                cantidad=cantidad, 
+                notas='Escaneo Rápido (Kiosco)',
+                usuario=usuario_actual
             )
-
-        elif accion == 'salida':
+            messages.success(request, f'✅ Se agregaron {cantidad} pz a {producto.nombre_tela}')
+            
+        elif tipo == 'salida':
             if producto.pz >= cantidad:
                 producto.pz -= cantidad
                 producto.save()
+                
                 MovimientoInventario.objects.create(
-                    producto=producto, tipo_movimiento='SALIDA', cantidad=cantidad, notas="QR Pieza única", usuario=usuario_actual
+                    producto=producto, 
+                    tipo_movimiento='SALIDA', 
+                    cantidad=cantidad, 
+                    notas='Escaneo Rápido (Kiosco)',
+                    usuario=usuario_actual
                 )
+                messages.warning(request, f'🔻 Se retiraron {cantidad} pz de {producto.nombre_tela}')
             else:
-                messages.error(request, f"❌ ERROR: Stock insuficiente ({producto.pz})")
-                return redirect('app:accion_producto', sku=sku)
+                messages.error(request, f'❌ Stock insuficiente. Tienes {producto.pz}, intentaste sacar {cantidad}.')
 
-        # Redirigir a pantalla de decisión
-        return render(request, 'app/decision_post_accion.html', {'producto': producto})
+        # Recargamos la misma página para ver el cambio instantáneo
+        return redirect('app:kiosco_movimiento', sku=sku)
 
-    contexto = { 'producto': producto }
-    return render(request, 'app/accion_producto.html', contexto)
+    return render(request, 'app/kiosco_movimiento.html', {'producto': producto})
+
+
+# --- VISTA ANTIGUA DE ACCIÓN (Mantenida por compatibilidad) ---
+
+def accion_producto(request, sku):
+    # Redirigimos al nuevo sistema Kiosco para unificar
+    return redirect('app:kiosco_movimiento', sku=sku)
 
 
 @login_required
@@ -226,7 +249,7 @@ def ver_reportes(request):
     # Filtros de fecha
     fecha_inicio_str = request.GET.get('fecha_inicio')
     fecha_fin_str = request.GET.get('fecha_fin')
-    
+     
     movimientos_query = MovimientoInventario.objects.all()
 
     if fecha_inicio_str and fecha_fin_str:
@@ -237,7 +260,7 @@ def ver_reportes(request):
             movimientos_query = movimientos_query.filter(fecha__range=[fecha_inicio, fecha_fin])
         except ValueError:
             pass
-    
+     
     ultimos_movimientos = movimientos_query.order_by('-fecha')[:50]
 
     total_piezas = Producto.objects.aggregate(total=Sum('pz'))['total'] or 0
@@ -299,7 +322,7 @@ def generar_descripcion_api(request):
         except Exception as e:
             print(f"Error Gemini API: {e}")
             return JsonResponse({'error': str(e)}, status=500)
-    
+     
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
 # --- BORRAR ESTO DESPUÉS DE USAR ---

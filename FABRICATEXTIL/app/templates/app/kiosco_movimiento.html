@@ -1,0 +1,60 @@
+{% extends "app/base.html" %}
+
+{% block title %}Movimiento Rápido{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card shadow-lg border-0 text-center">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0 fw-bold">{{ producto.nombre }}</h4>
+                    <small>SKU: {{ producto.sku }}</small>
+                </div>
+
+                <div class="card-body p-4">
+                    <h6 class="text-muted text-uppercase mb-2">Stock Actual</h6>
+                    <h1 class="display-1 fw-bold text-dark mb-4">{{ producto.stock }}</h1>
+
+                    <hr>
+
+                    <p class="mb-3 text-muted">¿Qué deseas hacer?</p>
+
+                    <form method="POST" class="d-grid gap-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="cantidad" value="1">
+
+                        <button type="submit" name="tipo" value="entrada" class="btn btn-success btn-lg py-3 rounded-pill shadow">
+                            <i class="bi bi-plus-circle-fill display-6 align-middle me-2"></i>
+                            <span class="fs-4 align-middle">ENTRADA (+1)</span>
+                        </button>
+
+                        <button type="submit" name="tipo" value="salida" class="btn btn-danger btn-lg py-3 rounded-pill shadow">
+                            <i class="bi bi-dash-circle-fill display-6 align-middle me-2"></i>
+                            <span class="fs-4 align-middle">SALIDA (-1)</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-white p-3">
+                    <a href="{% url 'app:escaner_producto' %}" class="btn btn-outline-secondary w-100 rounded-pill">
+                        <i class="bi bi-qr-code"></i> Escanear Otro Producto
+                    </a>
+                </div>
+            </div>
+
+            {% if messages %}
+            <div class="mt-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} text-center shadow-sm rounded-pill" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

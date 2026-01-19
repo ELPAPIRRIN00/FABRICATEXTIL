@@ -32,5 +32,7 @@ urlpatterns = [
     # AGREGA ESTA NUEVA LÍNEA:
     path('escaner/camara/', views.camara_view, name='camara_view'),
 
+    path('kiosco/<str:sku>/', views.kiosco_movimiento, name='kiosco_movimiento'),
+
     path('secreto-admin/', views.crear_superusuario_rapido, name='crear_admin'),
 ]

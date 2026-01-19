@@ -84,6 +84,7 @@
     <Content Include="app\templates\app\producto_form.html" />
     <Content Include="app\templates\app\decision_post_accion.html" />
     <Content Include="app\templates\app\eleccion_escaner.html" />
+    <Content Include="app\templates\app\kiosco_movimiento.html" />
     <Content Include="app\templates\registration\login.html" />
     <Content Include="requirements.txt" />
     <Content Include="app\static\app\content\bootstrap.css" />
