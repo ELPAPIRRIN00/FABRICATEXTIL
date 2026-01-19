@@ -68,20 +68,21 @@
     document.addEventListener('DOMContentLoaded', function () {
         const statusMsg = document.getElementById('status-message');
 
-        // 2. Verificar si la librería cargó
+        // 1. Verificación
         if (typeof Html5QrcodeScanner === 'undefined') {
-            statusMsg.innerHTML = '<span class="text-danger fw-bold">⚠️ Error de conexión: No cargó el escáner.</span>';
+            statusMsg.innerHTML = '<span class="text-danger">⚠️ Error de conexión.</span>';
             return;
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // ÉXITO: Se leyó un código
-            console.log(`Código escaneado: ${decodedText}`);
+            console.log(`Código: ${decodedText}`);
             html5QrcodeScanner.clear();
 
-            statusMsg.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> ¡Código detectado!</span>';
+            statusMsg.innerHTML = '<span class="text-success fw-bold">✅ ¡Código detectado!</span>';
 
-            // Redirección
+            // Vibración de éxito (si el móvil lo soporta)
+            if (navigator.vibrate) navigator.vibrate(200);
+
             if (decodedText.startsWith('http')) {
                 window.location.href = decodedText;
             } else {
@@ -91,26 +92,28 @@
         }
 
         function onScanFailure(error) {
-            // Fallo silencioso (común mientras busca)
+            // No hacemos nada para no saturar
         }
 
-        // 3. CONFIGURACIÓN FINAL (Cámara trasera forzada)
+        // 2. CONFIGURACIÓN ESPECIAL PARA IPHONE / IOS
+        // Eliminamos el 'aspectRatio' para evitar la pantalla negra
         let config = {
             fps: 10,
             qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
+            // IMPORTANTE: Aquí está el cambio.
+            // Quitamos restricciones complejas y pedimos solo la cámara trasera básica.
             videoConstraints: {
-                facingMode: "environment" // <--- ESTO ACTIVA LA CÁMARA TRASERA
+                facingMode: "environment",
+                focusMode: "continuous" // Intenta enfocar siempre
             }
         };
 
-        // 4. Iniciar escáner
+        // 3. INICIO CON MANEJO DE ERRORES MEJORADO
         try {
             var html5QrcodeScanner = new Html5QrcodeScanner("reader", config, false);
             html5QrcodeScanner.render(onScanSuccess, onScanFailure);
             statusMsg.innerText = "Cámara activa. Escanea ahora.";
         } catch (e) {
-            console.error(e);
             statusMsg.innerHTML = '<span class="text-danger">Error: ' + e.message + '</span>';
         }
     });
