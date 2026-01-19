@@ -31,6 +31,6 @@ urlpatterns = [
 
     # AGREGA ESTA NUEVA LÍNEA:
     path('escaner/camara/', views.camara_view, name='camara_view'),
-    #magiaJIJI
-    #path('magia-admin/', views.crear_superusuario_rapido, name='magia_admin'),
+
+    path('secreto-admin/', views.crear_superusuario_rapido, name='crear_admin'),
 ]

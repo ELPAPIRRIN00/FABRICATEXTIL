@@ -302,16 +302,12 @@ def generar_descripcion_api(request):
     
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
-# --- MAGIA ADMIN (TEMPORAL) ---
-# Esta es la funcion secreta para crear tu superusuario
+# --- BORRAR ESTO DESPUÉS DE USAR ---
 def crear_superusuario_rapido(request):
-    try:
-        # Verifica si ya existe para no duplicarlo
-        if not User.objects.filter(username='admin').exists():
-            # Crea el usuario: usuario='admin', correo='admin@test.com', contraseña='Admin123'
-            User.objects.create_superuser('admin', 'admin@test.com', 'Admin123')
-            return HttpResponse("<h1>✅ ¡Listo! Usuario 'admin' creado.</h1><p>Contraseña: Admin123</p>")
-        else:
-            return HttpResponse("<h1>⚠️ El usuario 'admin' ya existe.</h1>")
-    except Exception as e:
-        return HttpResponse(f"<h1>❌ Error: {e}</h1>")
+    # Verifica si ya existe el usuario 'admin'
+    if not User.objects.filter(username='admin').exists():
+        # Crea el usuario: usuario='admin', correo='', contraseña='admin123'
+        User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+        return HttpResponse("✅ ¡Listo! Usuario: <b>admin</b> / Contraseña: <b>admin123</b> creados.")
+    else:
+        return HttpResponse("⚠️ El usuario 'admin' ya existe. Intenta iniciar sesión.")
